@@ -10,7 +10,7 @@ test = ["pytest>=7.0.0"]
 dev = ["ruff"]
 
 [project.scripts]
-svg2compose = "src.cli:main"
+svg2compose = "src.cli:cli"
 
 [build-system]
 requires = ["hatchling"]

@@ -2,8 +2,10 @@ import re
 from typing import List, Tuple
 from ..ir.path_node import (
   IrPathNode, IrClose, IrMoveTo, IrLineTo, IrHorizontalTo, IrVerticalTo,
-  IrCurveTo, IrRelativeMoveTo, IrRelativeLineTo,
-  IrRelativeHorizontalTo, IrRelativeVerticalTo, IrRelativeCurveTo
+  IrCurveTo, IrQuadTo, IrReflectiveCurveTo, IrReflectiveQuadTo, IrArcTo,
+  IrRelativeMoveTo, IrRelativeLineTo, IrRelativeHorizontalTo, IrRelativeVerticalTo, 
+  IrRelativeCurveTo, IrRelativeQuadTo, IrRelativeReflectiveCurveTo, 
+  IrRelativeReflectiveQuadTo, IrRelativeArcTo
 )
 
 
@@ -145,6 +147,80 @@ class PathParser:
         dx3 = self._read_number()
         dy3 = self._read_number()
         nodes.append(IrRelativeCurveTo(dx1, dy1, dx2, dy2, dx3, dy3))
+    
+    elif command == "S":
+      while self._has_more_coordinates():
+        x2 = self._read_number()
+        y2 = self._read_number()
+        x3 = self._read_number()
+        y3 = self._read_number()
+        nodes.append(IrReflectiveCurveTo(x2, y2, x3, y3))
+    
+    elif command == "s":
+      while self._has_more_coordinates():
+        dx2 = self._read_number()
+        dy2 = self._read_number()
+        dx3 = self._read_number()
+        dy3 = self._read_number()
+        nodes.append(IrRelativeReflectiveCurveTo(dx2, dy2, dx3, dy3))
+    
+    elif command == "Q":
+      while self._has_more_coordinates():
+        x1 = self._read_number()
+        y1 = self._read_number()
+        x2 = self._read_number()
+        y2 = self._read_number()
+        nodes.append(IrQuadTo(x1, y1, x2, y2))
+    
+    elif command == "q":
+      while self._has_more_coordinates():
+        dx1 = self._read_number()
+        dy1 = self._read_number()
+        dx2 = self._read_number()
+        dy2 = self._read_number()
+        nodes.append(IrRelativeQuadTo(dx1, dy1, dx2, dy2))
+    
+    elif command == "T":
+      while self._has_more_coordinates():
+        x = self._read_number()
+        y = self._read_number()
+        nodes.append(IrReflectiveQuadTo(x, y))
+    
+    elif command == "t":
+      while self._has_more_coordinates():
+        dx = self._read_number()
+        dy = self._read_number()
+        nodes.append(IrRelativeReflectiveQuadTo(dx, dy))
+    
+    elif command == "A":
+      while self._has_more_coordinates():
+        rx = self._read_number()
+        ry = self._read_number()
+        x_axis_rotation = self._read_number()
+        large_arc_flag = self._read_number()
+        sweep_flag = self._read_number()
+        x = self._read_number()
+        y = self._read_number()
+        nodes.append(IrArcTo(
+          rx, ry, x_axis_rotation,
+          large_arc_flag != 0, sweep_flag != 0,
+          x, y
+        ))
+    
+    elif command == "a":
+      while self._has_more_coordinates():
+        rx = self._read_number()
+        ry = self._read_number()
+        x_axis_rotation = self._read_number()
+        large_arc_flag = self._read_number()
+        sweep_flag = self._read_number()
+        dx = self._read_number()
+        dy = self._read_number()
+        nodes.append(IrRelativeArcTo(
+          rx, ry, x_axis_rotation,
+          large_arc_flag != 0, sweep_flag != 0,
+          dx, dy
+        ))
     
     else:
       raise ValueError(f"Unsupported path command: {command}")

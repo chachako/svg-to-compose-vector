@@ -86,6 +86,28 @@ class IrQuadTo(IrPathNode):
 
 
 @dataclass(frozen=True)
+class IrReflectiveCurveTo(IrPathNode):
+  """Absolute reflective cubic Bezier curve command (S)."""
+  x2: float
+  y2: float
+  x3: float
+  y3: float
+  
+  def to_compose_dsl(self) -> str:
+    return f"reflectiveCurveTo({self.x2}f, {self.y2}f, {self.x3}f, {self.y3}f)"
+
+
+@dataclass(frozen=True)
+class IrReflectiveQuadTo(IrPathNode):
+  """Absolute reflective quadratic Bezier curve command (T)."""
+  x: float
+  y: float
+  
+  def to_compose_dsl(self) -> str:
+    return f"reflectiveQuadTo({self.x}f, {self.y}f)"
+
+
+@dataclass(frozen=True)
 class IrArcTo(IrPathNode):
   """Absolute arc command (A)."""
   horizontal_ellipse_radius: float
@@ -165,6 +187,28 @@ class IrRelativeQuadTo(IrPathNode):
   
   def to_compose_dsl(self) -> str:
     return f"quadToRelative({self.dx1}f, {self.dy1}f, {self.dx2}f, {self.dy2}f)"
+
+
+@dataclass(frozen=True)
+class IrRelativeReflectiveCurveTo(IrPathNode):
+  """Relative reflective cubic Bezier curve command (s)."""
+  dx2: float
+  dy2: float
+  dx3: float
+  dy3: float
+  
+  def to_compose_dsl(self) -> str:
+    return f"reflectiveCurveToRelative({self.dx2}f, {self.dy2}f, {self.dx3}f, {self.dy3}f)"
+
+
+@dataclass(frozen=True)
+class IrRelativeReflectiveQuadTo(IrPathNode):
+  """Relative reflective quadratic Bezier curve command (t)."""
+  dx: float
+  dy: float
+  
+  def to_compose_dsl(self) -> str:
+    return f"reflectiveQuadToRelative({self.dx}f, {self.dy}f)"
 
 
 @dataclass(frozen=True)
