@@ -23,3 +23,9 @@ htmlcov/
 
 # Type checking
 .mypy_cache/
+
+# Examples-generated output files
+examples/output/*.kt
+
+# Claude settings
+.claude/settings.local.json

@@ -6,12 +6,11 @@ Demonstrate complete SVG to Compose ImageVector conversion workflow.
 import sys
 from pathlib import Path
 
-# Add src to path
-src_path = Path(__file__).parent / "src"
-sys.path.insert(0, str(src_path))
+# Add src to path and import modules
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from src.parser.svg_parser import SvgParser
-from src.generator.image_vector_generator import ImageVectorGenerator
+from src.parser.svg_parser import SvgParser  # noqa: E402
+from src.generator.image_vector_generator import ImageVectorGenerator  # noqa: E402
 
 def demo_star_icon():
   """Demonstrate star icon conversion."""
