@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg_to_compose_mapping>
+    <description>
+        Comprehensive mapping between SVG elements/attributes and Compose ImageVector API calls.
+        Based on analysis of Compose source code and Valkyrie implementation.
+    </description>
+    
+    <svg_elements>
+        <element name="svg">
+            <attributes>
+                <attr name="width" maps_to="defaultWidth (in dp)" conversion="parse_dimension_to_dp"/>
+                <attr name="height" maps_to="defaultHeight (in dp)" conversion="parse_dimension_to_dp"/>
+                <attr name="viewBox" maps_to="viewportWidth, viewportHeight" conversion="parse_viewbox"/>
+            </attributes>
+            <compose_api>
+                ImageVector.Builder(
+                    name = "IconName",
+                    defaultWidth = width.dp,
+                    defaultHeight = height.dp,
+                    viewportWidth = viewboxWidth,
+                    viewportHeight = viewboxHeight
+                )
+            </compose_api>
+        </element>
+        
+        <element name="path">
+            <attributes>
+                <attr name="d" maps_to="pathData: List&lt;PathNode&gt;" conversion="parse_path_string_to_path_nodes"/>
+                <attr name="fill" maps_to="fill: Brush?" conversion="parse_paint_to_brush"/>
+                <attr name="fill-opacity" maps_to="fillAlpha: Float" conversion="parse_opacity"/>
+                <attr name="stroke" maps_to="stroke: Brush?" conversion="parse_paint_to_brush"/>
+                <attr name="stroke-opacity" maps_to="strokeAlpha: Float" conversion="parse_opacity"/>
+                <attr name="stroke-width" maps_to="strokeLineWidth: Float" conversion="parse_float"/>
+                <attr name="stroke-linecap" maps_to="strokeLineCap: StrokeCap" conversion="parse_stroke_cap"/>
+                <attr name="stroke-linejoin" maps_to="strokeLineJoin: StrokeJoin" conversion="parse_stroke_join"/>
+                <attr name="stroke-miterlimit" maps_to="strokeLineMiter: Float" conversion="parse_float"/>
+                <attr name="fill-rule" maps_to="pathFillType: PathFillType" conversion="parse_fill_rule"/>
+            </attributes>
+            <compose_api>
+                path(
+                    fill = SolidColor(Color(0xFF...)) or Brush.linearGradient(...),
+                    fillAlpha = 1.0f,
+                    stroke = SolidColor(Color(0xFF...)),
+                    strokeAlpha = 1.0f,
+                    strokeLineWidth = 1.0f,
+                    strokeLineCap = StrokeCap.Butt,
+                    strokeLineJoin = StrokeJoin.Miter,
+                    strokeLineMiter = 4.0f,
+                    pathFillType = PathFillType.NonZero
+                ) {
+                    // PathNode DSL calls
+                }
+            </compose_api>
+        </element>
+        
+        <element name="g">
+            <attributes>
+                <attr name="transform" maps_to="group transformations" conversion="parse_transform_matrix"/>
+                <attr name="clip-path" maps_to="clipPathData: List&lt;PathNode&gt;" conversion="parse_clip_path"/>
+            </attributes>
+            <compose_api>
+                group(
+                    name = "GroupName",
+                    rotate = angle,
+                    pivotX = px,
+                    pivotY = py,
+                    scaleX = sx,
+                    scaleY = sy,
+                    translationX = tx,
+                    translationY = ty,
+                    clipPathData = pathNodes
+                ) {
+                    // nested content
+                }
+            </compose_api>
+        </element>
+        
+        <element name="defs">
+            <description>Contains definitions for gradients, patterns, etc.</description>
+            <processing>Parse and store for later reference by id</processing>
+        </element>
+        
+        <element name="linearGradient">
+            <attributes>
+                <attr name="id" maps_to="reference_id" conversion="store_for_reference"/>
+                <attr name="x1" maps_to="start.x" conversion="parse_coordinate"/>
+                <attr name="y1" maps_to="start.y" conversion="parse_coordinate"/>
+                <attr name="x2" maps_to="end.x" conversion="parse_coordinate"/>
+                <attr name="y2" maps_to="end.y" conversion="parse_coordinate"/>
+                <attr name="gradientUnits" maps_to="coordinate_system" conversion="parse_gradient_units"/>
+                <attr name="gradientTransform" maps_to="transformation" conversion="parse_transform"/>
+            </attributes>
+            <compose_api>
+                Brush.linearGradient(
+                    colorStops = arrayOf(
+                        0.0f to Color(0xFF...),
+                        1.0f to Color(0xFF...)
+                    ),
+                    start = Offset(x1, y1),
+                    end = Offset(x2, y2)
+                )
+            </compose_api>
+        </element>
+        
+        <element name="radialGradient">
+            <attributes>
+                <attr name="id" maps_to="reference_id" conversion="store_for_reference"/>
+                <attr name="cx" maps_to="center.x" conversion="parse_coordinate"/>
+                <attr name="cy" maps_to="center.y" conversion="parse_coordinate"/>
+                <attr name="r" maps_to="radius" conversion="parse_length"/>
+                <attr name="fx" maps_to="focal.x" conversion="parse_coordinate"/>
+                <attr name="fy" maps_to="focal.y" conversion="parse_coordinate"/>
+            </attributes>
+            <compose_api>
+                Brush.radialGradient(
+                    colorStops = arrayOf(...),
+                    center = Offset(cx, cy),
+                    radius = r
+                )
+            </compose_api>
+        </element>
+        
+        <element name="stop">
+            <attributes>
+                <attr name="offset" maps_to="color_stop_position" conversion="parse_percentage_or_float"/>
+                <attr name="stop-color" maps_to="color" conversion="parse_color"/>
+                <attr name="stop-opacity" maps_to="alpha" conversion="parse_opacity"/>
+            </attributes>
+            <compose_api>offset to Color(color).copy(alpha = alpha)</compose_api>
+        </element>
+    </svg_elements>
+    
+    <path_commands>
+        <description>SVG path commands to Compose PathNode mapping</description>
+        
+        <command svg="M x y" compose="moveTo(x, y)" type="absolute"/>
+        <command svg="m dx dy" compose="relativeMoveTo(dx, dy)" type="relative"/>
+        <command svg="L x y" compose="lineTo(x, y)" type="absolute"/>
+        <command svg="l dx dy" compose="relativeLineTo(dx, dy)" type="relative"/>
+        <command svg="H x" compose="horizontalTo(x)" type="absolute"/>
+        <command svg="h dx" compose="relativeHorizontalTo(dx)" type="relative"/>
+        <command svg="V y" compose="verticalTo(y)" type="absolute"/>
+        <command svg="v dy" compose="relativeVerticalTo(dy)" type="relative"/>
+        <command svg="C x1 y1 x2 y2 x y" compose="curveTo(x1, y1, x2, y2, x, y)" type="absolute"/>
+        <command svg="c dx1 dy1 dx2 dy2 dx dy" compose="relativeCurveTo(dx1, dy1, dx2, dy2, dx, dy)" type="relative"/>
+        <command svg="S x2 y2 x y" compose="reflectiveCurveTo(x2, y2, x, y)" type="absolute"/>
+        <command svg="s dx2 dy2 dx dy" compose="relativeReflectiveCurveTo(dx2, dy2, dx, dy)" type="relative"/>
+        <command svg="Q x1 y1 x y" compose="quadTo(x1, y1, x, y)" type="absolute"/>
+        <command svg="q dx1 dy1 dx dy" compose="relativeQuadTo(dx1, dy1, dx, dy)" type="relative"/>
+        <command svg="T x y" compose="reflectiveQuadTo(x, y)" type="absolute"/>
+        <command svg="t dx dy" compose="relativeReflectiveQuadTo(dx, dy)" type="relative"/>
+        <command svg="A rx ry x-axis-rotation large-arc-flag sweep-flag x y" compose="arcTo(rx, ry, rotation, largeArc, sweep, x, y)" type="absolute"/>
+        <command svg="a rx ry x-axis-rotation large-arc-flag sweep-flag dx dy" compose="relativeArcTo(rx, ry, rotation, largeArc, sweep, dx, dy)" type="relative"/>
+        <command svg="Z" compose="close()" type="close"/>
+        <command svg="z" compose="close()" type="close"/>
+    </path_commands>
+    
+    <color_formats>
+        <format name="hex_3" pattern="#RGB" conversion="expand_to_rrggbb"/>
+        <format name="hex_6" pattern="#RRGGBB" conversion="parse_hex_to_int"/>
+        <format name="rgb" pattern="rgb(r,g,b)" conversion="parse_rgb_values"/>
+        <format name="rgba" pattern="rgba(r,g,b,a)" conversion="parse_rgba_values"/>
+        <format name="hsl" pattern="hsl(h,s,l)" conversion="convert_hsl_to_rgb"/>
+        <format name="named" pattern="red|blue|green|..." conversion="lookup_named_color"/>
+        <format name="currentColor" pattern="currentColor" conversion="inherit_from_parent"/>
+        <format name="none" pattern="none" conversion="no_fill_or_stroke"/>
+    </color_formats>
+    
+    <transform_functions>
+        <function name="translate" pattern="translate(tx [ty])" effect="translationX, translationY"/>
+        <function name="scale" pattern="scale(sx [sy])" effect="scaleX, scaleY"/>
+        <function name="rotate" pattern="rotate(angle [cx cy])" effect="rotation, pivotX, pivotY"/>
+        <function name="skewX" pattern="skewX(angle)" effect="matrix_transformation"/>
+        <function name="skewY" pattern="skewY(angle)" effect="matrix_transformation"/>
+        <function name="matrix" pattern="matrix(a b c d e f)" effect="full_matrix_decomposition"/>
+    </transform_functions>
+    
+    <units>
+        <unit name="px" conversion="direct_pixel_value"/>
+        <unit name="dp" conversion="density_independent_pixels"/>
+        <unit name="em" conversion="relative_to_font_size"/>
+        <unit name="rem" conversion="relative_to_root_font_size"/>
+        <unit name="%" conversion="percentage_of_parent"/>
+        <unit name="pt" conversion="points_to_pixels"/>
+        <unit name="pc" conversion="picas_to_pixels"/>
+        <unit name="mm" conversion="millimeters_to_pixels"/>
+        <unit name="cm" conversion="centimeters_to_pixels"/>
+        <unit name="in" conversion="inches_to_pixels"/>
+    </units>
+</svg_to_compose_mapping>

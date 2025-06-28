@@ -1,0 +1,649 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<implementation_details>
+    <description>
+        Specific implementation details, code examples, and technical specifications
+        for the SVG to Compose ImageVector converter project.
+    </description>
+    
+    <project_structure>
+        <uv_project>
+            <pyproject_toml>
+                [project]
+                name = "svg-to-compose-vector"
+                version = "0.1.0"
+                description = "Convert SVG files to Compose ImageVector Kotlin code"
+                dependencies = [
+                    "click>=8.0.0",
+                    "jinja2>=3.0.0",
+                ]
+                
+                [project.scripts]
+                svg2compose = "src.cli:main"
+                
+                [build-system]
+                requires = ["hatchling"]
+                build-backend = "hatchling.build"
+            </pyproject_toml>
+        </uv_project>
+    </project_structure>
+    
+    <ir_implementation_examples>
+        <file name="ir/color.py">
+            <code>
+                from dataclasses import dataclass
+                from typing import Optional
+                import re
+                
+                @dataclass(frozen=True)
+                class IrColor:
+                    argb: int
+                    
+                    @classmethod
+                    def from_hex(cls, hex_string: str) -> 'IrColor':
+                        """Parse hex color: #RGB, #RRGGBB, #RRGGBBAA"""
+                        hex_string = hex_string.lstrip('#')
+                        if len(hex_string) == 3:
+                            # RGB -> RRGGBB
+                            hex_string = ''.join(c*2 for c in hex_string)
+                        if len(hex_string) == 6:
+                            # RRGGBB -> FFRRGGBB (opaque)
+                            hex_string = 'FF' + hex_string
+                        return cls(int(hex_string, 16))
+                    
+                    @classmethod
+                    def from_rgb(cls, r: int, g: int, b: int, a: int = 255) -> 'IrColor':
+                        """Create from RGBA components (0-255)"""
+                        return cls((a << 24) | (r << 16) | (g << 8) | b)
+                    
+                    def to_compose_color(self) -> str:
+                        """Generate Compose Color(...) code"""
+                        if self.argb in COMPOSE_NAMED_COLORS:
+                            return f"Color.{COMPOSE_NAMED_COLORS[self.argb]}"
+                        return f"Color(0x{self.argb:08X})"
+                    
+                    @property
+                    def alpha(self) -> int:
+                        return (self.argb >> 24) & 0xFF
+                    
+                    @property
+                    def red(self) -> int:
+                        return (self.argb >> 16) & 0xFF
+                    
+                    @property
+                    def green(self) -> int:
+                        return (self.argb >> 8) & 0xFF
+                    
+                    @property
+                    def blue(self) -> int:
+                        return self.argb & 0xFF
+                
+                # Compose named colors mapping
+                COMPOSE_NAMED_COLORS = {
+                    0xFF000000: "Black",
+                    0xFFFFFFFF: "White",
+                    0xFFFF0000: "Red",
+                    0xFF00FF00: "Green",
+                    0xFF0000FF: "Blue",
+                    # ... more named colors
+                }
+            </code>
+        </file>
+        
+        <file name="ir/path_node.py">
+            <code>
+                from abc import ABC, abstractmethod
+                from dataclasses import dataclass
+                from typing import List
+                
+                @dataclass(frozen=True)
+                class IrPathNode(ABC):
+                    """Base class for all path nodes"""
+                    
+                    @abstractmethod
+                    def to_compose_dsl(self) -> str:
+                        """Generate Compose path DSL code"""
+                        pass
+                
+                @dataclass(frozen=True)
+                class IrClose(IrPathNode):
+                    def to_compose_dsl(self) -> str:
+                        return "close()"
+                
+                @dataclass(frozen=True)
+                class IrMoveTo(IrPathNode):
+                    x: float
+                    y: float
+                    
+                    def to_compose_dsl(self) -> str:
+                        return f"moveTo({self.x:.3f}f, {self.y:.3f}f)"
+                
+                @dataclass(frozen=True)
+                class IrLineTo(IrPathNode):
+                    x: float
+                    y: float
+                    
+                    def to_compose_dsl(self) -> str:
+                        return f"lineTo({self.x:.3f}f, {self.y:.3f}f)"
+                
+                @dataclass(frozen=True)
+                class IrCurveTo(IrPathNode):
+                    x1: float
+                    y1: float
+                    x2: float
+                    y2: float
+                    x3: float
+                    y3: float
+                    
+                    def to_compose_dsl(self) -> str:
+                        return (f"curveTo({self.x1:.3f}f, {self.y1:.3f}f, "
+                               f"{self.x2:.3f}f, {self.y2:.3f}f, "
+                               f"{self.x3:.3f}f, {self.y3:.3f}f)")
+                
+                # ... more PathNode implementations
+            </code>
+        </file>
+        
+        <file name="ir/vector_node.py">
+            <code>
+                from abc import ABC, abstractmethod
+                from dataclasses import dataclass, field
+                from typing import List, Optional
+                from .path_node import IrPathNode
+                from .color import IrColor
+                from .gradient import IrFill, IrStroke
+                
+                @dataclass(frozen=True)
+                class IrVectorNode(ABC):
+                    """Base class for vector nodes"""
+                    name: str = ""
+                
+                @dataclass(frozen=True)
+                class IrVectorPath(IrVectorNode):
+                    paths: List[IrPathNode]
+                    fill: Optional[IrFill] = None
+                    fill_alpha: float = 1.0
+                    stroke: Optional[IrStroke] = None
+                    stroke_alpha: float = 1.0
+                    stroke_line_width: float = 0.0
+                    stroke_line_cap: str = "Butt"  # StrokeCap enum
+                    stroke_line_join: str = "Miter"  # StrokeJoin enum
+                    stroke_line_miter: float = 4.0
+                    path_fill_type: str = "NonZero"  # PathFillType enum
+                
+                @dataclass(frozen=True)
+                class IrVectorGroup(IrVectorNode):
+                    nodes: List[IrVectorNode] = field(default_factory=list)
+                    rotation: float = 0.0
+                    pivot_x: float = 0.0
+                    pivot_y: float = 0.0
+                    scale_x: float = 1.0
+                    scale_y: float = 1.0
+                    translation_x: float = 0.0
+                    translation_y: float = 0.0
+                    clip_path_data: List[IrPathNode] = field(default_factory=list)
+            </code>
+        </file>
+    </ir_implementation_examples>
+    
+    <parser_implementation_examples>
+        <file name="parser/path_parser.py">
+            <code>
+                import re
+                from typing import List, Iterator, Tuple
+                from ..ir.path_node import *
+                
+                class PathParser:
+                    # Regex for path tokenization
+                    PATH_REGEX = re.compile(r'([MmLlHhVvCcSsQqTtAaZz])|([+-]?[0-9]*\.?[0-9]+(?:[eE][+-]?[0-9]+)?)')
+                    
+                    def parse_path_data(self, path_string: str) -> List[IrPathNode]:
+                        """Parse SVG path data string into PathNode list"""
+                        tokens = self._tokenize(path_string)
+                        nodes = []
+                        
+                        current_command = None
+                        command_args = []
+                        
+                        for token in tokens:
+                            if self._is_command(token):
+                                # Process previous command if exists
+                                if current_command:
+                                    nodes.extend(self._create_nodes(current_command, command_args))
+                                
+                                current_command = token
+                                command_args = []
+                            else:
+                                # Numeric argument
+                                command_args.append(float(token))
+                        
+                        # Process final command
+                        if current_command:
+                            nodes.extend(self._create_nodes(current_command, command_args))
+                        
+                        return nodes
+                    
+                    def _tokenize(self, path_string: str) -> List[str]:
+                        """Tokenize path string into commands and coordinates"""
+                        matches = self.PATH_REGEX.findall(path_string)
+                        tokens = []
+                        for command, coord in matches:
+                            if command:
+                                tokens.append(command)
+                            elif coord:
+                                tokens.append(coord)
+                        return tokens
+                    
+                    def _is_command(self, token: str) -> bool:
+                        """Check if token is a path command"""
+                        return token in 'MmLlHhVvCcSsQqTtAaZz'
+                    
+                    def _create_nodes(self, command: str, args: List[float]) -> List[IrPathNode]:
+                        """Create PathNode instances from command and arguments"""
+                        nodes = []
+                        
+                        if command in 'Zz':
+                            nodes.append(IrClose())
+                        elif command == 'M':
+                            # MoveTo with implicit LineTo for subsequent coordinates
+                            if len(args) >= 2:
+                                nodes.append(IrMoveTo(args[0], args[1]))
+                                for i in range(2, len(args), 2):
+                                    if i + 1 < len(args):
+                                        nodes.append(IrLineTo(args[i], args[i + 1]))
+                        elif command == 'm':
+                            # Relative MoveTo
+                            if len(args) >= 2:
+                                nodes.append(IrRelativeMoveTo(args[0], args[1]))
+                                for i in range(2, len(args), 2):
+                                    if i + 1 < len(args):
+                                        nodes.append(IrRelativeLineTo(args[i], args[i + 1]))
+                        elif command == 'L':
+                            for i in range(0, len(args), 2):
+                                if i + 1 < len(args):
+                                    nodes.append(IrLineTo(args[i], args[i + 1]))
+                        elif command == 'C':
+                            for i in range(0, len(args), 6):
+                                if i + 5 < len(args):
+                                    nodes.append(IrCurveTo(
+                                        args[i], args[i + 1],
+                                        args[i + 2], args[i + 3],
+                                        args[i + 4], args[i + 5]
+                                    ))
+                        # ... handle other commands
+                        
+                        return nodes
+            </code>
+        </file>
+        
+        <file name="parser/color_parser.py">
+            <code>
+                import re
+                from typing import Optional
+                from ..ir.color import IrColor
+                
+                class ColorParser:
+                    # Color parsing regexes
+                    HEX_REGEX = re.compile(r'#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})')
+                    RGB_REGEX = re.compile(r'rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)')
+                    RGBA_REGEX = re.compile(r'rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)')
+                    
+                    # Named colors mapping
+                    NAMED_COLORS = {
+                        'black': 0xFF000000,
+                        'white': 0xFFFFFFFF,
+                        'red': 0xFFFF0000,
+                        'green': 0xFF00FF00,
+                        'blue': 0xFF0000FF,
+                        'transparent': 0x00000000,
+                        # ... more named colors
+                    }
+                    
+                    def parse_color(self, color_string: str) -> Optional[IrColor]:
+                        """Parse color string to IrColor"""
+                        if not color_string or color_string == 'none':
+                            return None
+                        
+                        color_string = color_string.strip().lower()
+                        
+                        # Try hex format
+                        hex_match = self.HEX_REGEX.match(color_string)
+                        if hex_match:
+                            return IrColor.from_hex(color_string)
+                        
+                        # Try rgb format
+                        rgb_match = self.RGB_REGEX.match(color_string)
+                        if rgb_match:
+                            r, g, b = map(int, rgb_match.groups())
+                            return IrColor.from_rgb(r, g, b)
+                        
+                        # Try rgba format
+                        rgba_match = self.RGBA_REGEX.match(color_string)
+                        if rgba_match:
+                            r, g, b, a = rgba_match.groups()
+                            alpha = int(float(a) * 255)
+                            return IrColor.from_rgb(int(r), int(g), int(b), alpha)
+                        
+                        # Try named color
+                        if color_string in self.NAMED_COLORS:
+                            return IrColor(self.NAMED_COLORS[color_string])
+                        
+                        # Unknown color format
+                        raise ValueError(f"Unknown color format: {color_string}")
+            </code>
+        </file>
+    </parser_implementation_examples>
+    
+    <generator_implementation_examples>
+        <file name="generator/image_vector_generator.py">
+            <code>
+                from typing import List, Set
+                from ..ir.image_vector import IrImageVector
+                from ..ir.vector_node import IrVectorPath, IrVectorGroup
+                from .kotlin_builder import KotlinCodeBuilder
+                
+                class ImageVectorGenerator:
+                    def __init__(self):
+                        self.imports: Set[str] = set()
+                    
+                    def generate(self, ir: IrImageVector) -> tuple[str, Set[str]]:
+                        """Generate ImageVector.Builder code and required imports"""
+                        builder = KotlinCodeBuilder()
+                        self.imports.clear()
+                        
+                        # Start ImageVector.Builder
+                        builder.add_line("ImageVector.Builder(")
+                        builder.indent()
+                        
+                        # Add non-default parameters only
+                        if ir.name:
+                            builder.add_line(f'name = "{ir.name}",')
+                        
+                        builder.add_line(f"defaultWidth = {ir.default_width:.1f}.dp,")
+                        builder.add_line(f"defaultHeight = {ir.default_height:.1f}.dp,")
+                        builder.add_line(f"viewportWidth = {ir.viewport_width:.1f}f,")
+                        builder.add_line(f"viewportHeight = {ir.viewport_height:.1f}f")
+                        
+                        if ir.auto_mirror:
+                            builder.add_line("autoMirror = true")
+                        
+                        builder.dedent()
+                        builder.add_line(").apply {")
+                        builder.indent()
+                        
+                        # Generate nodes
+                        for node in ir.nodes:
+                            self._generate_node(builder, node)
+                        
+                        builder.dedent()
+                        builder.add_line("}.build()")
+                        
+                        self.imports.update([
+                            "androidx.compose.ui.graphics.vector.ImageVector",
+                            "androidx.compose.ui.graphics.vector.path",
+                            "androidx.compose.ui.unit.dp"
+                        ])
+                        
+                        return builder.build(), self.imports
+                    
+                    def _generate_node(self, builder: KotlinCodeBuilder, node):
+                        """Generate code for a vector node"""
+                        if isinstance(node, IrVectorPath):
+                            self._generate_path(builder, node)
+                        elif isinstance(node, IrVectorGroup):
+                            self._generate_group(builder, node)
+                    
+                    def _generate_path(self, builder: KotlinCodeBuilder, path: IrVectorPath):
+                        """Generate path(...) { } block"""
+                        params = []
+                        
+                        if path.fill:
+                            fill_code = self._generate_fill(path.fill)
+                            params.append(f"fill = {fill_code}")
+                        
+                        if path.fill_alpha != 1.0:
+                            params.append(f"fillAlpha = {path.fill_alpha:.3f}f")
+                        
+                        if path.stroke:
+                            stroke_code = self._generate_stroke(path.stroke)
+                            params.append(f"stroke = {stroke_code}")
+                        
+                        # Add other non-default parameters...
+                        
+                        if params:
+                            builder.add_line("path(")
+                            builder.indent()
+                            for i, param in enumerate(params):
+                                suffix = "," if i < len(params) - 1 else ""
+                                builder.add_line(f"{param}{suffix}")
+                            builder.dedent()
+                            builder.add_line(") {")
+                        else:
+                            builder.add_line("path {")
+                        
+                        builder.indent()
+                        
+                        # Generate path data DSL
+                        for path_node in path.paths:
+                            builder.add_line(path_node.to_compose_dsl())
+                        
+                        builder.dedent()
+                        builder.add_line("}")
+                    
+                    def _generate_fill(self, fill) -> str:
+                        """Generate fill brush code"""
+                        if hasattr(fill, 'color'):
+                            # Solid color fill
+                            self.imports.add("androidx.compose.ui.graphics.SolidColor")
+                            return f"SolidColor({fill.color.to_compose_color()})"
+                        elif hasattr(fill, 'color_stops'):
+                            # Gradient fill
+                            if hasattr(fill, 'start_x'):
+                                # Linear gradient
+                                return self._generate_linear_gradient(fill)
+                            else:
+                                # Radial gradient
+                                return self._generate_radial_gradient(fill)
+                        
+                        return "null"
+            </code>
+        </file>
+        
+        <file name="generator/kotlin_builder.py">
+            <code>
+                from typing import List, Set
+                
+                class KotlinCodeBuilder:
+                    def __init__(self, indent_size: int = 4):
+                        self.lines: List[str] = []
+                        self.indent_level: int = 0
+                        self.indent_size: int = indent_size
+                        self.imports: Set[str] = set()
+                    
+                    def add_line(self, line: str = ""):
+                        """Add a line with proper indentation"""
+                        if line.strip():
+                            indent = " " * (self.indent_level * self.indent_size)
+                            self.lines.append(indent + line)
+                        else:
+                            self.lines.append("")
+                    
+                    def indent(self):
+                        """Increase indentation level"""
+                        self.indent_level += 1
+                    
+                    def dedent(self):
+                        """Decrease indentation level"""
+                        self.indent_level = max(0, self.indent_level - 1)
+                    
+                    def add_import(self, import_path: str):
+                        """Add import to the set"""
+                        self.imports.add(import_path)
+                    
+                    def build(self) -> str:
+                        """Build final code string"""
+                        return "\n".join(self.lines)
+                    
+                    def build_with_imports(self) -> str:
+                        """Build code with imports at the top"""
+                        import_lines = [f"import {imp}" for imp in sorted(self.imports)]
+                        if import_lines:
+                            import_lines.append("")  # Empty line after imports
+                        
+                        all_lines = import_lines + self.lines
+                        return "\n".join(all_lines)
+            </code>
+        </file>
+    </generator_implementation_examples>
+    
+    <template_system_examples>
+        <file name="generator/templates/image_vector.j2">
+            <template>
+                {%- if imports %}
+                {%- for import in imports %}
+                import {{ import }}
+                {%- endfor %}
+
+                {% endif -%}
+                {{ wrapper_start }}{{ build_code }}{{ wrapper_end }}
+            </template>
+        </file>
+        
+        <usage_examples>
+            <example name="backing_property">
+                <template>
+                    wrapper_start: "val MyIcons.Home: ImageVector\n    get() {\n        if (_home != null) {\n            return _home!!\n        }\n        _home = "
+                    wrapper_end: "\n        return _home!!\n    }\n\n@Suppress(\"ObjectPropertyName\")\nprivate var _home: ImageVector? = null"
+                </template>
+            </example>
+            
+            <example name="lazy_property">
+                <template>
+                    wrapper_start: "val MyIcons.Home: ImageVector by lazy(LazyThreadSafetyMode.NONE) {\n    "
+                    wrapper_end: "\n}"
+                </template>
+            </example>
+            
+            <example name="simple_function">
+                <template>
+                    wrapper_start: "fun homeIcon(): ImageVector = "
+                    wrapper_end: ""
+                </template>
+            </example>
+        </usage_examples>
+    </template_system_examples>
+    
+    <cli_implementation_example>
+        <file name="cli.py">
+            <code>
+                import click
+                from pathlib import Path
+                from .core.processor import SvgProcessor
+                from .core.config import Config
+                
+                @click.command()
+                @click.argument('input_file', type=click.Path(exists=True, path_type=Path))
+                @click.option('--output', '-o', type=click.Path(path_type=Path), 
+                             help='Output file path (default: stdout)')
+                @click.option('--template', '-t', type=str,
+                             help='Template string or file path')
+                @click.option('--wrapper-start', type=str, default='',
+                             help='Template prefix (e.g., "val icon: ImageVector = ")')
+                @click.option('--wrapper-end', type=str, default='',
+                             help='Template suffix')
+                @click.option('--config', '-c', type=click.Path(exists=True, path_type=Path),
+                             help='Configuration file path')
+                @click.option('--optimize/--no-optimize', default=True,
+                             help='Enable/disable code optimizations')
+                def convert(input_file, output, template, wrapper_start, wrapper_end, config, optimize):
+                    """Convert SVG file to Compose ImageVector Kotlin code"""
+                    
+                    # Load configuration
+                    cfg = Config()
+                    if config:
+                        cfg.load_from_file(config)
+                    
+                    # Override with command line options
+                    if wrapper_start:
+                        cfg.wrapper_start = wrapper_start
+                    if wrapper_end:
+                        cfg.wrapper_end = wrapper_end
+                    cfg.optimize = optimize
+                    
+                    # Process SVG file
+                    processor = SvgProcessor(cfg)
+                    result = processor.convert_file(input_file)
+                    
+                    # Output result
+                    if output:
+                        output.write_text(result)
+                        click.echo(f"Generated code written to {output}")
+                    else:
+                        click.echo(result)
+                
+                def main():
+                    convert()
+                
+                if __name__ == '__main__':
+                    main()
+            </code>
+        </file>
+    </cli_implementation_example>
+    
+    <testing_strategy_examples>
+        <test_categories>
+            <category name="unit_tests">
+                <test name="test_color_parsing">
+                    <cases>
+                        hex_colors, rgb_colors, rgba_colors, named_colors, invalid_colors
+                    </cases>
+                </test>
+                <test name="test_path_parsing">
+                    <cases>
+                        simple_paths, complex_curves, relative_commands, arc_commands, malformed_paths
+                    </cases>
+                </test>
+                <test name="test_ir_validation">
+                    <cases>
+                        valid_structures, invalid_parameters, missing_required_fields
+                    </cases>
+                </test>
+            </category>
+            
+            <category name="integration_tests">
+                <test name="test_svg_to_kotlin">
+                    <input>simple_icon.svg</input>
+                    <expected_output>working_kotlin_code.kt</expected_output>
+                </test>
+                <test name="test_gradient_conversion">
+                    <input>gradient_icon.svg</input>
+                    <verification>gradient_properties_preserved</verification>
+                </test>
+            </category>
+        </test_categories>
+    </testing_strategy_examples>
+    
+    <validation_rules>
+        <svg_validation>
+            <rule>SVG must have valid XML structure</rule>
+            <rule>Root element must be svg with width/height or viewBox</rule>
+            <rule>Path data must follow SVG path specification</rule>
+            <rule>Color values must be valid CSS colors</rule>
+            <rule>Transform attributes must be valid transform functions</rule>
+        </svg_validation>
+        
+        <ir_validation>
+            <rule>ImageVector dimensions must be positive</rule>
+            <rule>Color ARGB values must be valid 32-bit integers</rule>
+            <rule>Path coordinates must be finite numbers</rule>
+            <rule>Transform parameters must be within reasonable ranges</rule>
+            <rule>Nested group structure must not exceed reasonable depth</rule>
+        </ir_validation>
+        
+        <kotlin_validation>
+            <rule>Generated code must be syntactically valid Kotlin</rule>
+            <rule>All referenced classes must have proper imports</rule>
+            <rule>Parameter values must be within Compose API constraints</rule>
+            <rule>Generated ImageVector must be renderable without errors</rule>
+        </kotlin_validation>
+    </validation_rules>
+</implementation_details>

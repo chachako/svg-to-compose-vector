@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<detailed_tasks>
+    <description>
+        Complete task breakdown for implementing SVG to Compose ImageVector converter.
+        Each task includes specific implementation steps, required knowledge, and success criteria.
+    </description>
+    
+    <phase id="01_project_setup" name="Project Setup and Environment">
+        <task id="01_01" priority="critical">
+            <name>Create UV Python Project Structure</name>
+            <description>Set up the basic project structure with uv</description>
+            <steps>
+                <step>Initialize uv project with `uv init`</step>
+                <step>Configure pyproject.toml with dependencies</step>
+                <step>Create source directory structure</step>
+                <step>Set up basic CLI entry point</step>
+            </steps>
+            <dependencies>
+                <dep>xml.etree.ElementTree (built-in)</dep>
+                <dep>jinja2 (for templates)</dep>
+                <dep>click (for CLI)</dep>
+                <dep>dataclasses (built-in)</dep>
+                <dep>pathlib (built-in)</dep>
+                <dep>re (built-in)</dep>
+                <dep>typing (built-in)</dep>
+            </dependencies>
+            <success_criteria>
+                <criterion>Project structure created</criterion>
+                <criterion>Dependencies installed and working</criterion>
+                <criterion>Basic CLI runs without errors</criterion>
+            </success_criteria>
+        </task>
+        
+        <task id="01_02" priority="high">
+            <name>Create Package Structure</name>
+            <description>Set up the modular package structure</description>
+            <directory_structure>
+                src/
+                ├── __init__.py
+                ├── cli.py
+                ├── core/
+                │   ├── __init__.py
+                │   ├── config.py
+                │   └── processor.py
+                ├── parser/
+                │   ├── __init__.py
+                │   ├── svg_parser.py
+                │   ├── path_parser.py
+                │   ├── style_parser.py
+                │   ├── transform_parser.py
+                │   └── color_parser.py
+                ├── ir/
+                │   ├── __init__.py
+                │   ├── image_vector.py
+                │   ├── vector_node.py
+                │   ├── path_node.py
+                │   ├── color.py
+                │   ├── gradient.py
+                │   └── style.py
+                ├── generator/
+                │   ├── __init__.py
+                │   ├── kotlin_builder.py
+                │   ├── image_vector_generator.py
+                │   └── templates/
+                │       └── image_vector.j2
+                └── utils/
+                    ├── __init__.py
+                    ├── color_utils.py
+                    ├── math_utils.py
+                    └── validation.py
+            </directory_structure>
+        </task>
+    </phase>
+    
+    <phase id="02_ir_implementation" name="Intermediate Representation">
+        <task id="02_01" priority="critical">
+            <name>Implement IR Data Classes</name>
+            <description>Create Python dataclasses mirroring Valkyrie IR structure</description>
+            <implementation_order>
+                <file name="ir/color.py">
+                    <class name="IrColor">
+                        <fields>argb: int</fields>
+                        <methods>from_hex, from_rgb, to_compose_color</methods>
+                        <validation>Valid ARGB values, hex parsing</validation>
+                    </class>
+                </file>
+                <file name="ir/path_node.py">
+                    <classes>
+                        IrPathNode (ABC), IrClose, IrMoveTo, IrLineTo, IrHorizontalTo, IrVerticalTo,
+                        IrCurveTo, IrQuadTo, IrArcTo, IrRelativeMoveTo, IrRelativeLineTo, etc.
+                    </classes>
+                    <validation>Parameter counts, coordinate validity</validation>
+                </file>
+                <file name="ir/gradient.py">
+                    <classes>IrFill (ABC), IrColorFill, IrLinearGradient, IrRadialGradient, IrColorStop</classes>
+                </file>
+                <file name="ir/style.py">
+                    <classes>IrStroke, IrStrokeLineCap, IrStrokeLineJoin, IrPathFillType</classes>
+                </file>
+                <file name="ir/vector_node.py">
+                    <classes>IrVectorNode (ABC), IrVectorPath, IrVectorGroup</classes>
+                    <validation>Nested structure validity, transform parameters</validation>
+                </file>
+                <file name="ir/image_vector.py">
+                    <class name="IrImageVector">
+                        <fields>name, auto_mirror, default_width, default_height, viewport_width, viewport_height, nodes</fields>
+                        <validation>Positive dimensions, valid node list</validation>
+                    </class>
+                </file>
+            </implementation_order>
+        </task>
+    </phase>
+    
+    <phase id="03_svg_parsing" name="SVG Parsing Implementation">
+        <task id="03_01" priority="critical">
+            <name>Core SVG Document Parser</name>
+            <description>Parse SVG XML structure and extract basic properties</description>
+            <file>parser/svg_parser.py</file>
+            <implementation>
+                <class name="SvgParser">
+                    <method name="parse_svg">
+                        <input>svg_content: str or file_path: str</input>
+                        <output>IrImageVector</output>
+                        <logic>
+                            1. Parse XML using ElementTree
+                            2. Extract root svg element
+                            3. Parse width, height, viewBox attributes
+                            4. Handle units conversion (px, dp, em, %, etc.)
+                            5. Recursively parse child elements
+                            6. Build IrImageVector with all nodes
+                        </logic>
+                    </method>
+                    <method name="parse_element">
+                        <input>element: Element, context: ParseContext</input>
+                        <output>List[IrVectorNode]</output>
+                        <logic>
+                            - Switch on element.tag (path, g, defs, linearGradient, etc.)
+                            - Delegate to specialized parsers
+                            - Handle inheritance of styles and transforms
+                        </logic>
+                    </method>
+                </class>
+                <class name="ParseContext">
+                    <fields>defs_cache, parent_styles, transform_stack, gradient_cache</fields>
+                </class>
+            </implementation>
+        </task>
+        
+        <task id="03_02" priority="critical">
+            <name>Path Data Parser</name>
+            <description>Parse SVG path d attribute to PathNode list</description>
+            <file>parser/path_parser.py</file>
+            <implementation>
+                <class name="PathParser">
+                    <method name="parse_path_data">
+                        <input>path_string: str</input>
+                        <output>List[IrPathNode]</output>
+                        <algorithm>
+                            1. Tokenize path string (commands and coordinates)
+                            2. Parse command sequences with proper argument counts
+                            3. Handle relative/absolute coordinate conversion
+                            4. Create appropriate IrPathNode instances
+                            5. Validate parameter counts for each command
+                            6. Handle implicit LineTo after MoveTo sequences
+                        </algorithm>
+                    </method>
+                    <method name="tokenize_path">
+                        <logic>Regex-based tokenization handling scientific notation, commas, spaces</logic>
+                    </method>
+                    <method name="parse_command">
+                        <logic>Switch on command character, parse specific argument patterns</logic>
+                    </method>
+                </class>
+                <validation>
+                    <rule>M command must have even number of coordinates</rule>
+                    <rule>C command must have 6 coordinates per segment</rule>
+                    <rule>A command must have 7 coordinates per segment</rule>
+                    <rule>Handle repeated commands without explicit letter</rule>
+                </validation>
+            </implementation>
+        </task>
+        
+        <task id="03_03" priority="high">
+            <name>Style and Color Parser</name>
+            <description>Parse SVG style attributes and color values</description>
+            <file>parser/style_parser.py</file>
+            <implementation>
+                <class name="StyleParser">
+                    <method name="parse_style_attribute">
+                        <input>style_string: str</input>
+                        <output>Dict[str, str]</output>
+                        <logic>Parse CSS-style declarations: "property: value; property: value"</logic>
+                    </method>
+                    <method name="resolve_style">
+                        <input>element: Element, context: ParseContext</input>
+                        <output>ResolvedStyle</output>
+                        <logic>
+                            1. Parse style attribute
+                            2. Parse individual attributes (fill, stroke, etc.)
+                            3. Handle inheritance from parent context
+                            4. Resolve url() references to gradients
+                            5. Apply CSS cascade rules
+                        </logic>
+                    </method>
+                </class>
+            </implementation>
+            <file>parser/color_parser.py</file>
+            <implementation>
+                <class name="ColorParser">
+                    <method name="parse_color">
+                        <input>color_string: str</input>
+                        <output>IrColor</output>
+                        <supported_formats>
+                            - hex: #RGB, #RRGGBB, #RRGGBBAA
+                            - rgb: rgb(r,g,b), rgba(r,g,b,a)
+                            - hsl: hsl(h,s,l), hsla(h,s,l,a)
+                            - named: red, blue, green, etc.
+                            - currentColor, none, inherit
+                        </supported_formats>
+                    </method>
+                    <method name="parse_paint">
+                        <input>paint_string: str, context: ParseContext</input>
+                        <output>IrFill or None</output>
+                        <logic>
+                            - Handle url(#gradientId) references
+                            - Parse solid colors
+                            - Handle "none" as null
+                        </logic>
+                    </method>
+                </class>
+            </implementation>
+        </task>
+        
+        <task id="03_04" priority="high">
+            <name>Transform Parser</name>
+            <description>Parse SVG transform attributes</description>
+            <file>parser/transform_parser.py</file>
+            <implementation>
+                <class name="TransformParser">
+                    <method name="parse_transform">
+                        <input>transform_string: str</input>
+                        <output>TransformMatrix</output>
+                        <supported_functions>
+                            - translate(tx [ty])
+                            - scale(sx [sy])
+                            - rotate(angle [cx cy])
+                            - skewX(angle), skewY(angle)
+                            - matrix(a b c d e f)
+                        </supported_functions>
+                    </method>
+                    <method name="decompose_matrix">
+                        <input>matrix: TransformMatrix</input>
+                        <output>DecomposedTransform</output>
+                        <logic>
+                            Extract translateX, translateY, scaleX, scaleY, rotation, pivotX, pivotY
+                            from combined transformation matrix
+                        </logic>
+                    </method>
+                </class>
+            </implementation>
+        </task>
+        
+        <task id="03_05" priority="medium">
+            <name>Gradient Parser</name>
+            <description>Parse linearGradient and radialGradient elements</description>
+            <implementation>
+                <method name="parse_linear_gradient">
+                    <logic>
+                        1. Parse x1, y1, x2, y2 coordinates
+                        2. Handle gradientUnits (objectBoundingBox vs userSpaceOnUse)
+                        3. Parse gradientTransform
+                        4. Collect stop elements with offset and stop-color
+                        5. Build IrLinearGradient
+                    </logic>
+                </method>
+                <method name="parse_radial_gradient">
+                    <logic>Similar to linear but with cx, cy, r, fx, fy parameters</logic>
+                </method>
+            </implementation>
+        </task>
+    </phase>
+    
+    <phase id="04_code_generation" name="Kotlin Code Generation">
+        <task id="04_01" priority="critical">
+            <name>Kotlin Code Builder</name>
+            <description>Implement builder for generating clean Kotlin code</description>
+            <file>generator/kotlin_builder.py</file>
+            <implementation>
+                <class name="KotlinCodeBuilder">
+                    <fields>lines: List[str], indent_level: int, imports: Set[str]</fields>
+                    <method name="add_line">Add indented line</method>
+                    <method name="add_block">Add block with proper bracing</method>
+                    <method name="indent">Increase indent level</method>
+                    <method name="dedent">Decrease indent level</method>
+                    <method name="add_import">Track required imports</method>
+                    <method name="build">Generate final code with imports</method>
+                </class>
+                <class name="ParameterBuilder">
+                    <method name="add_parameter">Add parameter only if not default value</method>
+                    <method name="format_color">Format color values optimally</method>
+                    <method name="format_float">Format float values with proper precision</method>
+                </class>
+            </implementation>
+        </task>
+        
+        <task id="04_02" priority="critical">
+            <name>ImageVector Generator</name>
+            <description>Generate ImageVector.Builder(...).build() code from IR</description>
+            <file>generator/image_vector_generator.py</file>
+            <implementation>
+                <class name="ImageVectorGenerator">
+                    <method name="generate">
+                        <input>ir: IrImageVector</input>
+                        <output>str (Kotlin code)</output>
+                        <template_variable>build_code</template_variable>
+                        <logic>
+                            1. Start ImageVector.Builder with basic parameters
+                            2. Generate .apply { } block with all paths and groups
+                            3. End with .build()
+                            4. Only include non-default parameters
+                            5. Optimize color representations
+                        </logic>
+                    </method>
+                    <method name="generate_path">
+                        <logic>
+                            path(
+                                fill = ...,
+                                stroke = ...,
+                                ...
+                            ) {
+                                pathData DSL calls
+                            }
+                        </logic>
+                    </method>
+                    <method name="generate_group">
+                        <logic>
+                            group(
+                                rotation = ...,
+                                scaleX = ...,
+                                ...
+                            ) {
+                                nested content
+                            }
+                        </logic>
+                    </method>
+                    <method name="generate_path_data">
+                        <logic>Convert List[IrPathNode] to DSL calls like moveTo(), lineTo(), etc.</logic>
+                    </method>
+                </class>
+            </implementation>
+        </task>
+        
+        <task id="04_03" priority="high">
+            <name>Template System</name>
+            <description>Implement Jinja2-based template system for output customization</description>
+            <file>generator/templates/image_vector.j2</file>
+            <template_content>
+                {{- imports }}
+                
+                {{ wrapper_start }}{{ build_code }}{{ wrapper_end }}
+            </template_content>
+            <variables>
+                <var name="imports">Required imports list</var>
+                <var name="build_code">ImageVector.Builder(...).build() code</var>
+                <var name="wrapper_start">User-defined prefix (e.g., "val icon: ImageVector = ")</var>
+                <var name="wrapper_end">User-defined suffix (e.g., "")</var>
+            </variables>
+        </task>
+    </phase>
+    
+    <phase id="05_cli_and_config" name="CLI and Configuration">
+        <task id="05_01" priority="medium">
+            <name>Configuration System</name>
+            <description>Implement configuration management</description>
+            <file>core/config.py</file>
+            <implementation>
+                <class name="Config">
+                    <fields>
+                        template_path: str
+                        wrapper_start: str = ""
+                        wrapper_end: str = ""
+                        optimize_colors: bool = True
+                        optimize_paths: bool = True
+                        indent_size: int = 4
+                        use_trailing_comma: bool = True
+                    </fields>
+                </class>
+            </implementation>
+        </task>
+        
+        <task id="05_02" priority="medium">
+            <name>CLI Implementation</name>
+            <description>Create command-line interface</description>
+            <file>cli.py</file>
+            <commands>
+                <command name="convert">
+                    <args>input_file: Path</args>
+                    <options>
+                        --output, -o: Output file path
+                        --template, -t: Template file or inline template
+                        --config, -c: Config file path
+                        --wrapper-start: Template prefix
+                        --wrapper-end: Template suffix
+                    </options>
+                </command>
+            </commands>
+        </task>
+    </phase>
+    
+    <phase id="06_testing_validation" name="Testing and Validation">
+        <task id="06_01" priority="high">
+            <name>Unit Tests</name>
+            <description>Comprehensive unit test suite</description>
+            <test_files>
+                <file>test_path_parser.py</file>
+                <file>test_color_parser.py</file>
+                <file>test_svg_parser.py</file>
+                <file>test_ir_structures.py</file>
+                <file>test_code_generator.py</file>
+            </test_files>
+        </task>
+        
+        <task id="06_02" priority="high">
+            <name>Integration Tests</name>
+            <description>End-to-end conversion tests</description>
+            <test_cases>
+                <case>Simple path icon</case>
+                <case>Complex path with curves and arcs</case>
+                <case>Multi-path icon</case>
+                <case>Grouped elements with transforms</case>
+                <case>Gradient fills</case>
+                <case>Stroke styles</case>
+            </test_cases>
+        </task>
+        
+        <task id="06_03" priority="medium">
+            <name>Validation Against Valkyrie</name>
+            <description>Compare output with Valkyrie-generated code</description>
+            <methodology>
+                1. Use same SVG inputs as Valkyrie test cases
+                2. Compare generated Kotlin code structure
+                3. Verify mathematical accuracy of coordinates
+                4. Validate color and gradient conversions
+            </methodology>
+        </task>
+    </phase>
+    
+    <implementation_notes>
+        <note>Start with Phase 02 (IR) as it defines the data structures for everything else</note>
+        <note>Phase 03 (Parsing) can be implemented incrementally by SVG feature</note>
+        <note>Phase 04 (Generation) depends on completed IR and should start with simple cases</note>
+        <note>Each parser should handle errors gracefully and provide meaningful error messages</note>
+        <note>All coordinate and mathematical operations should preserve precision</note>
+        <note>Template system should be flexible enough for various output formats</note>
+    </implementation_notes>
+</detailed_tasks>

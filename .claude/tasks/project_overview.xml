@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <name>SVG to Compose ImageVector Converter</name>
+    <description>
+        A Python script using uv environment to convert SVG files to Compose ImageVector Kotlin code.
+        Based on Valkyrie project architecture and Compose official source code analysis.
+    </description>
+    
+    <objectives>
+        <objective id="template_system">
+            Implement simple template system that generates only ImageVector.Builder(...).build() core code,
+            allowing users to wrap it with custom templates like: val icon: ImageVector = %{build}
+        </objective>
+        <objective id="accurate_parsing">
+            Accurately parse SVG elements including paths, styles, transforms, colors, gradients
+        </objective>
+        <objective id="compose_conversion">
+            Convert SVG concepts to precise Compose ImageVector API calls
+        </objective>
+        <objective id="valkyrie_reference">
+            Use Valkyrie project as reference baseline for code quality and structure
+        </objective>
+    </objectives>
+    
+    <constraints>
+        <constraint>Must work with uv Python environment</constraint>
+        <constraint>Generate only ImageVector.Builder core code, not full wrapper</constraint>
+        <constraint>Must be accurate and follow Compose best practices</constraint>
+        <constraint>Support template-based output customization</constraint>
+    </constraints>
+    
+    <architecture>
+        <layer name="cli">Entry point and command line interface</layer>
+        <layer name="parser">SVG parsing and element extraction</layer>
+        <layer name="ir">Intermediate representation based on Valkyrie IR design</layer>
+        <layer name="generator">Kotlin code generation with template support</layer>
+        <layer name="utils">Utilities for color, math, validation</layer>
+    </architecture>
+</project>

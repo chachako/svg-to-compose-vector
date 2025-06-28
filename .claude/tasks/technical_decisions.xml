@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<technical_decisions>
+    <description>
+        Key architectural and technical decisions for the SVG to Compose ImageVector converter.
+        These decisions are based on analysis of Compose source code and Valkyrie project structure.
+    </description>
+    
+    <architecture_decisions>
+        <decision id="layered_architecture">
+            <title>Layered Architecture Pattern</title>
+            <rationale>
+                - Separation of concerns between parsing, IR, and generation
+                - Easier testing and maintenance
+                - Mirrors Valkyrie project structure
+                - Allows for future extensibility
+            </rationale>
+            <implementation>
+                Parser Layer -> IR Layer -> Generator Layer
+                Each layer has single responsibility and clear interfaces
+            </implementation>
+        </decision>
+        
+        <decision id="ir_design">
+            <title>Intermediate Representation Design</title>
+            <rationale>
+                - Based on proven Valkyrie IR structure
+                - Type-safe Python dataclasses
+                - Immutable data structures
+                - Direct mapping to Compose ImageVector API
+            </rationale>
+            <implementation>
+                Use Python @dataclass with frozen=True for immutability
+                Mirror Valkyrie's IrImageVector, IrVectorNode hierarchy
+                Include validation methods in each IR class
+            </implementation>
+        </decision>
+        
+        <decision id="template_only_approach">
+            <title>Template-Only Code Generation</title>
+            <rationale>
+                - User requested simple template system
+                - Focus on generating ImageVector.Builder core code only
+                - Maximum flexibility for output customization
+                - Avoid complexity of multiple built-in modes
+            </rationale>
+            <implementation>
+                Generate only: ImageVector.Builder(...).build()
+                Use Jinja2 templates for wrapper customization
+                Provide template variables: imports, build_code, wrapper_start, wrapper_end
+            </implementation>
+        </decision>
+        
+        <decision id="parser_incremental">
+            <title>Incremental Parser Implementation</title>
+            <rationale>
+                - SVG specification is large and complex
+                - Start with core features, expand gradually
+                - Allow for early testing and validation
+                - Focus on most common SVG features first
+            </rationale>
+            <implementation>
+                Priority order: basic paths -> groups -> gradients -> advanced features
+                Each parser module handles specific SVG element types
+                Graceful degradation for unsupported features
+            </implementation>
+        </decision>
+    </architecture_decisions>
+    
+    <technology_choices>
+        <choice id="python_dataclasses">
+            <technology>Python dataclasses</technology>
+            <reason>Type safety, immutability, clear structure definition</reason>
+            <alternative>Plain classes or dictionaries</alternative>
+            <decision>Use dataclasses with frozen=True for IR structures</decision>
+        </choice>
+        
+        <choice id="xml_parser">
+            <technology>xml.etree.ElementTree</technology>
+            <reason>Built-in, sufficient for SVG parsing, no external dependencies</reason>
+            <alternative>lxml, BeautifulSoup</alternative>
+            <decision>Use ElementTree for simplicity and no external deps</decision>
+        </choice>
+        
+        <choice id="template_engine">
+            <technology>Jinja2</technology>
+            <reason>Powerful template system, good Python integration, flexible</reason>
+            <alternative>String formatting, custom template system</alternative>
+            <decision>Use Jinja2 for maximum template flexibility</decision>
+        </choice>
+        
+        <choice id="cli_framework">
+            <technology>Click</technology>
+            <reason>Modern, feature-rich CLI framework, good documentation</reason>
+            <alternative>argparse, typer</alternative>
+            <decision>Use Click for CLI implementation</decision>
+        </choice>
+        
+        <choice id="color_representation">
+            <technology>Integer ARGB values</technology>
+            <reason>Direct compatibility with Compose Color, efficient storage</reason>
+            <alternative>RGB tuples, Color objects</alternative>
+            <decision>Use int ARGB like Valkyrie IrColor</decision>
+        </choice>
+    </technology_choices>
+    
+    <code_generation_strategy>
+        <principle id="parameter_optimization">
+            <title>Parameter Optimization</title>
+            <description>Only generate parameters that differ from default values</description>
+            <implementation>
+                Track default values for all ImageVector.Builder parameters
+                Compare IR values against defaults before including in output
+                Results in cleaner, more readable generated code
+            </implementation>
+        </principle>
+        
+        <principle id="color_optimization">
+            <title>Color Value Optimization</title>
+            <description>Use most readable color representation</description>
+            <implementation>
+                Named colors: Color.Red instead of Color(0xFFFF0000) when possible
+                Hex optimization: Color(0xFF123456) format
+                Alpha handling: Color.Red.copy(alpha = 0.5f) for transparency
+            </implementation>
+        </principle>
+        
+        <principle id="coordinate_precision">
+            <title>Coordinate Precision</title>
+            <description>Maintain appropriate precision for coordinates</description>
+            <implementation>
+                Use float precision sufficient for display
+                Remove unnecessary decimal places
+                Preserve precision for mathematical accuracy
+            </implementation>
+        </principle>
+        
+        <principle id="import_optimization">
+            <title>Import Management</title>
+            <description>Generate minimal required imports</description>
+            <implementation>
+                Track usage of Compose classes during generation
+                Generate import statements dynamically
+                Avoid unused imports
+            </implementation>
+        </principle>
+    </code_generation_strategy>
+    
+    <error_handling_strategy>
+        <level id="parsing_errors">
+            <title>SVG Parsing Errors</title>
+            <approach>Graceful degradation with warnings</approach>
+            <implementation>
+                Log warnings for unsupported features
+                Skip invalid elements rather than failing completely
+                Provide detailed error messages with line numbers when possible
+            </implementation>
+        </level>
+        
+        <level id="validation_errors">
+            <title>IR Validation Errors</title>
+            <approach>Strict validation with helpful error messages</approach>
+            <implementation>
+                Validate IR structure before code generation
+                Check for required fields, valid ranges, proper nesting
+                Provide suggestions for fixing common issues
+            </implementation>
+        </level>
+        
+        <level id="generation_errors">
+            <title>Code Generation Errors</title>
+            <approach>Fail fast with clear diagnostics</approach>
+            <implementation>
+                Validate templates before processing
+                Check for required template variables
+                Provide context about what was being generated when error occurred
+            </implementation>
+        </level>
+    </error_handling_strategy>
+    
+    <performance_considerations>
+        <consideration id="memory_usage">
+            <title>Memory Efficiency</title>
+            <strategy>
+                Use immutable dataclasses to allow Python optimization
+                Stream processing for large SVG files where possible
+                Avoid keeping entire DOM tree in memory after parsing
+            </strategy>
+        </consideration>
+        
+        <consideration id="parsing_speed">
+            <title>Parsing Performance</title>
+            <strategy>
+                Cache compiled regex patterns
+                Use efficient string operations
+                Minimize object creation during parsing
+            </strategy>
+        </consideration>
+        
+        <consideration id="generation_speed">
+            <title>Code Generation Performance</title>
+            <strategy>
+                Pre-compile Jinja2 templates
+                Use string builders for efficient concatenation
+                Batch similar operations
+            </strategy>
+        </consideration>
+    </performance_considerations>
+    
+    <extensibility_design>
+        <extension_point id="custom_parsers">
+            <title>Custom Element Parsers</title>
+            <description>Allow parsing of custom SVG elements or attributes</description>
+            <mechanism>Parser registry with registration for specific element types</mechanism>
+        </extension_point>
+        
+        <extension_point id="custom_ir_nodes">
+            <title>Custom IR Node Types</title>
+            <description>Support for additional IR node types beyond standard SVG</description>
+            <mechanism>Plugin system for IR node type registration</mechanism>
+        </extension_point>
+        
+        <extension_point id="custom_generators">
+            <title>Custom Code Generators</title>
+            <description>Support for generating code in formats other than Kotlin</description>
+            <mechanism>Generator interface with pluggable implementations</mechanism>
+        </extension_point>
+    </extensibility_design>
+    
+    <quality_assurance>
+        <measure id="test_coverage">
+            <title>Test Coverage Requirements</title>
+            <target>Minimum 90% code coverage for all modules</target>
+            <focus>Critical path testing for parsing and generation logic</focus>
+        </measure>
+        
+        <measure id="valkyrie_compatibility">
+            <title>Valkyrie Output Compatibility</title>
+            <validation>Generate equivalent output for same SVG inputs</validation>
+            <method>Automated comparison tests against Valkyrie test cases</method>
+        </measure>
+        
+        <measure id="compose_compatibility">
+            <title>Compose API Compatibility</title>
+            <validation>Generated code compiles and renders correctly</validation>
+            <method>Compile-time validation of generated Kotlin code</method>
+        </measure>
+    </quality_assurance>
+</technical_decisions>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<key_files>
+    <description>
+        Critical source code files that have been analyzed and must be referenced for accurate implementation.
+        These files contain the authoritative implementation details for Compose ImageVector and Valkyrie IR.
+    </description>
+    
+    <compose_source_files>
+        <file>
+            <path>/Users/cha/Documents/projects/learning/androidx/compose/ui/ui/src/commonMain/kotlin/androidx/compose/ui/graphics/vector/ImageVector.kt</path>
+            <importance>critical</importance>
+            <content_summary>
+                - ImageVector class definition with all properties (name, defaultWidth, defaultHeight, viewportWidth, viewportHeight, root, tintColor, tintBlendMode, autoMirror)
+                - ImageVector.Builder class with complete API (addPath, addGroup, clearGroup, build methods)
+                - VectorGroup and VectorPath classes with all parameters
+                - Default constants and DSL extensions (path{}, group{})
+            </content_summary>
+            <key_insights>
+                - Builder pattern for ImageVector construction
+                - Support for nested groups with transformations
+                - Path parameters: pathData, pathFillType, fill, fillAlpha, stroke, strokeAlpha, strokeLineWidth, strokeLineCap, strokeLineJoin, strokeLineMiter, trimPathStart, trimPathEnd, trimPathOffset
+                - Group parameters: name, rotate, pivotX, pivotY, scaleX, scaleY, translationX, translationY, clipPathData
+            </key_insights>
+        </file>
+        
+        <file>
+            <path>/Users/cha/Documents/projects/learning/androidx/compose/ui/ui-graphics/src/commonMain/kotlin/androidx/compose/ui/graphics/vector/PathNode.kt</path>
+            <importance>critical</importance>
+            <content_summary>
+                - Complete PathNode sealed class hierarchy
+                - All SVG path commands: Close, MoveTo, LineTo, HorizontalTo, VerticalTo, CurveTo, QuadTo, ArcTo and their relative variants
+                - Path parsing constants and argument counts
+                - Conversion from SVG path commands to PathNode instances
+            </content_summary>
+            <key_insights>
+                - Exact mapping between SVG path commands and PathNode types
+                - Parameter structure for each command type (absolute vs relative coordinates)
+                - Path command argument validation and parsing logic
+            </key_insights>
+        </file>
+        
+        <file>
+            <path>/Users/cha/Documents/projects/learning/androidx/compose/ui/ui/src/commonMain/kotlin/androidx/compose/ui/graphics/vector/Vector.kt</path>
+            <importance>high</importance>
+            <content_summary>
+                - VectorComponent, PathComponent, GroupComponent implementation
+                - Default constants for all vector properties
+                - Path data parsing and rendering logic
+                - Color and gradient handling
+            </content_summary>
+            <key_insights>
+                - Default values for all vector properties
+                - Path optimization and rendering strategies
+                - Color and brush handling patterns
+            </key_insights>
+        </file>
+    </compose_source_files>
+    
+    <valkyrie_ir_structure>
+        <discovered_via>Task tool exploration of /Users/cha/Documents/projects/community/Valkyrie/components/ir/</discovered_via>
+        <key_structures>
+            <structure name="IrImageVector">
+                Properties: name, autoMirror, defaultWidth, defaultHeight, viewportWidth, viewportHeight, nodes
+            </structure>
+            <structure name="IrVectorNode">
+                Sealed interface with IrGroup and IrPath implementations
+            </structure>
+            <structure name="IrVectorPath">
+                Properties: name, paths, fill, stroke, fillAlpha, strokeAlpha, strokeLineWidth, strokeLineCap, strokeLineJoin, strokeLineMiter, pathFillType
+            </structure>
+            <structure name="IrVectorGroup">
+                Properties: name, nodes, rotation, scaleX, scaleY, translationX, translationY, pivotX, pivotY, clipPathData
+            </structure>
+            <structure name="IrPathNode">
+                Sealed interface with all SVG path command types
+            </structure>
+            <structure name="IrColor">
+                Value class with ARGB int representation, named color support, hex parsing
+            </structure>
+            <structure name="IrFill">
+                Sealed interface: Color, LinearGradient, RadialGradient with ColorStop
+            </structure>
+            <structure name="IrStroke">
+                Sealed interface supporting Color strokes
+            </structure>
+        </key_structures>
+    </valkyrie_ir_structure>
+    
+    <valkyrie_code_generation>
+        <discovered_via>Task tool exploration of /Users/cha/Documents/projects/community/Valkyrie/components/generator/</discovered_via>
+        <key_insights>
+            <insight>Uses KotlinPoet-like builder pattern for code generation</insight>
+            <insight>Supports multiple generation modes: backing property, lazy property, simple function</insight>
+            <insight>Optimizes parameters by omitting default values</insight>
+            <insight>Handles imports and package declarations automatically</insight>
+            <insight>Supports gradient and color optimization</insight>
+            <insight>Template-based approach with configurable formatting</insight>
+        </key_insights>
+    </valkyrie_code_generation>
+</key_files>
