@@ -50,7 +50,7 @@ class TestSvgParser:
     path_node = ir.nodes[0]
     assert path_node.name == "triangle"
     assert path_node.fill is not None
-    assert path_node.fill.to_compose_color() == "Color(0xFFFF0000)"  # Red
+    assert path_node.fill.to_compose_color() == "Color.Red"  # Red
 
     # Should have 4 path commands: MoveTo, LineTo, LineTo, Close
     assert len(path_node.paths) == 4
@@ -67,7 +67,7 @@ class TestSvgParser:
 
     assert len(ir.nodes) == 1
     path_node = ir.nodes[0]
-    assert path_node.fill.to_compose_color() == "Color(0xFF00FF00)"  # Green
+    assert path_node.fill.to_compose_color() == "Color.Green"  # Green
 
     # Should have 7 path commands: MoveTo + 5 LineTo + Close
     assert len(path_node.paths) == 7
@@ -122,9 +122,9 @@ class TestSvgParser:
     assert len(ir.nodes) == 3
 
     # Check colors
-    assert ir.nodes[0].fill.to_compose_color() == "Color(0xFFFF0000)"  # red
+    assert ir.nodes[0].fill.to_compose_color() == "Color.Red"  # red
     assert ir.nodes[1].fill.to_compose_color() == "Color(0xFF008000)"  # green (CSS standard)
-    assert ir.nodes[2].fill.to_compose_color() == "Color(0xFF0000FF)"  # blue
+    assert ir.nodes[2].fill.to_compose_color() == "Color.Blue"  # blue
 
   def test_svg_with_no_fill(self):
     """Test SVG path with no fill attribute."""
@@ -137,7 +137,7 @@ class TestSvgParser:
 
     assert len(ir.nodes) == 1
     # Should default to black when no fill specified
-    assert ir.nodes[0].fill.to_compose_color() == "Color(0xFF000000)"
+    assert ir.nodes[0].fill.to_compose_color() == "Color.Black"
 
   def test_invalid_svg_content(self):
     """Test error handling for invalid SVG content."""

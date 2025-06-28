@@ -15,7 +15,7 @@ def test_ir_color_parsing():
   assert red_color.green == 0
   assert red_color.blue == 0
   assert red_color.alpha == 255
-  assert red_color.to_compose_color() == "Color(0xFFFF0000)"
+  assert red_color.to_compose_color() == "Color.Red"
 
 
 def test_path_parser_basic_commands():

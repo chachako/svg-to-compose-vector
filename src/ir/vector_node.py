@@ -21,7 +21,7 @@ class IrVectorPath(IrVectorNode):
 
   paths: List[IrPathNode]
   fill: Optional[Union[IrColor, "IrFill"]] = field(default=None, kw_only=True)
-  stroke: Optional[IrColor] = field(default=None, kw_only=True)
+  stroke: Optional[Union[IrColor, "IrFill"]] = field(default=None, kw_only=True)
   fill_alpha: float = field(default=1.0, kw_only=True)
   stroke_alpha: float = field(default=1.0, kw_only=True)
   stroke_line_width: float = field(default=0.0, kw_only=True)
@@ -34,10 +34,14 @@ class IrVectorPath(IrVectorNode):
   trim_path_offset: float = field(default=0.0, kw_only=True)
 
   def __post_init__(self):
-    """Post-process the fill field to ensure it's an IrFill instance."""
+    """Post-process the fill and stroke fields to ensure they're IrFill instances."""
+    from .gradient import IrColorFill
+    
     if self.fill is not None and isinstance(self.fill, IrColor):
-      from .gradient import IrColorFill
       object.__setattr__(self, 'fill', IrColorFill(color=self.fill))
+    
+    if self.stroke is not None and isinstance(self.stroke, IrColor):
+      object.__setattr__(self, 'stroke', IrColorFill(color=self.stroke))
 
 
 @dataclass

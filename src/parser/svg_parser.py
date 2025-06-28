@@ -187,7 +187,7 @@ class SvgParser:
 
     # Parse styles
     fill_color = self._parse_fill(path_element, context)
-    stroke_color = self._parse_stroke(path_element)
+    stroke_color = self._parse_stroke(path_element, context)
     stroke_width = self._parse_stroke_width(path_element)
     stroke_opacity = self._parse_stroke_opacity(path_element)
     fill_opacity = self._parse_fill_opacity(path_element)
@@ -278,12 +278,21 @@ class SvgParser:
     # Fallback to black if we can't parse
     return IrColorFill(color=IrColor.from_hex("#000000"))
 
-  def _parse_stroke(self, element: ET.Element) -> Optional[IrColor]:
-    """Parse stroke attribute."""
+  def _parse_stroke(self, element: ET.Element, context: ParseContext) -> Optional[Union[IrColor, IrFill]]:
+    """Parse stroke attribute, supporting colors and gradients."""
     stroke_str = self._get_attribute_or_style(element, "stroke")
 
     if not stroke_str or stroke_str == "none":
       return None
+
+    # Check for gradient reference (url(#gradientId))
+    if stroke_str.startswith("url(#") and stroke_str.endswith(")"):
+      gradient_id = stroke_str[5:-1]  # Remove "url(#" and ")"
+      if gradient_id in context.gradients:
+        return context.gradients[gradient_id]
+      else:
+        # Gradient not found, fallback to black
+        return IrColor(argb=0xFF000000)
 
     # Use same color parsing logic as fill
     if stroke_str.startswith("#"):

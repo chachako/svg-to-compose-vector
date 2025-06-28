@@ -170,8 +170,8 @@ class TestGradientCodeGeneration:
     
     assert "Brush.linearGradient(" in code
     assert "colorStops = arrayOf(" in code
-    assert "0f to Color(0xFFFF0000)" in code
-    assert "1f to Color(0xFF0000FF)" in code
+    assert "0f to Color.Red" in code
+    assert "1f to Color.Blue" in code
     assert "start = Offset(0f, 0f)" in code
     assert "end = Offset(100f, 0f)" in code
 
@@ -194,8 +194,8 @@ class TestGradientCodeGeneration:
     
     assert "Brush.radialGradient(" in code
     assert "colorStops = arrayOf(" in code
-    assert "0f to Color(0xFFFFFFFF)" in code
-    assert "1f to Color(0xFF000000)" in code
+    assert "0f to Color.White" in code
+    assert "1f to Color.Black" in code
     assert "center = Offset(50f, 50f)" in code
     assert "radius = 40f" in code
 
@@ -264,5 +264,5 @@ class TestEndToEndGradients:
     assert "radius = " in kotlin_code
     
     # Check that opacity is properly handled in color stops
-    assert "Color(0xFFFFFFFF)" in kotlin_code  # White with full opacity
-    assert "Color(0xCC000000)" in kotlin_code  # Black with 0.8 opacity
+    assert "Color.White" in kotlin_code  # White with full opacity
+    assert "Color.Black.copy(alpha = 0.8f)" in kotlin_code  # Black with 0.8 opacity

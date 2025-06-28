@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Linear gradient for stroke -->
+    <linearGradient id="strokeLinearGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:red;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:yellow;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:blue;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Radial gradient for stroke -->
+    <radialGradient id="strokeRadialGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:purple;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:orange;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Linear gradient for fill -->
+    <linearGradient id="fillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:lightblue;stop-opacity:0.7" />
+      <stop offset="100%" style="stop-color:darkblue;stop-opacity:0.7" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Rectangle with linear gradient stroke -->
+  <path d="M 20 20 L 80 20 L 80 80 L 20 80 Z"
+        stroke="url(#strokeLinearGrad)" 
+        stroke-width="6" 
+        fill="none" />
+  
+  <!-- Circle with radial gradient stroke -->
+  <path d="M 150 50 A 30 30 0 1 1 149.99 50"
+        stroke="url(#strokeRadialGrad)" 
+        stroke-width="8" 
+        fill="none"
+        stroke-linecap="round" />
+  
+  <!-- Complex shape with both gradient fill and gradient stroke -->
+  <path d="M 50 120 L 100 120 L 125 150 L 100 180 L 50 180 L 25 150 Z"
+        fill="url(#fillGrad)"
+        stroke="url(#strokeLinearGrad)" 
+        stroke-width="4"
+        stroke-linejoin="round" />
+  
+  <!-- Line with gradient stroke and different line caps -->
+  <path d="M 20 120 L 20 180"
+        stroke="url(#strokeRadialGrad)" 
+        stroke-width="12"
+        stroke-linecap="round" />
+  
+  <!-- Curved path with gradient stroke -->
+  <path d="M 140 120 Q 170 140 140 160 Q 110 140 140 120"
+        stroke="url(#strokeLinearGrad)" 
+        stroke-width="5"
+        fill="none"
+        stroke-linejoin="round" />
+</svg>

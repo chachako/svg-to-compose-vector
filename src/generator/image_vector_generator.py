@@ -85,9 +85,8 @@ class ImageVectorGenerator:
         lines.append(f"{indent}  fill = {fill_code},")
 
       if path.stroke is not None:
-        self.imports.add("androidx.compose.ui.graphics.Color")
-        self.imports.add("androidx.compose.ui.graphics.SolidColor")
-        lines.append(f"{indent}  stroke = {path.stroke.to_compose_solid_color()},")
+        stroke_code = self._generate_fill_code(path.stroke, indent_level=2)
+        lines.append(f"{indent}  stroke = {stroke_code},")
 
       if path.fill_alpha != 1.0:
         lines.append(f"{indent}  fillAlpha = {format_float(path.fill_alpha)},")
@@ -227,7 +226,7 @@ class ImageVectorGenerator:
     if isinstance(fill, IrColorFill):
       self.imports.add("androidx.compose.ui.graphics.Color")
       self.imports.add("androidx.compose.ui.graphics.SolidColor")
-      return fill.color.to_compose_solid_color()
+      return self._generate_solid_color_code(fill.color)
     elif isinstance(fill, (IrLinearGradient, IrRadialGradient)):
       self.imports.add("androidx.compose.ui.graphics.Brush")
       self.imports.add("androidx.compose.ui.geometry.Offset")
@@ -239,3 +238,21 @@ class ImageVectorGenerator:
       self.imports.add("androidx.compose.ui.graphics.Color")
       self.imports.add("androidx.compose.ui.graphics.SolidColor")
       return "SolidColor(Color.Black)"
+
+  def _generate_solid_color_code(self, color) -> str:
+    """Generate SolidColor code for color, preferring named constants."""
+    self.imports.add("androidx.compose.ui.graphics.Color")
+    
+    # Try to use named color constants first
+    named_color = color.to_compose_color_name()
+    if named_color and color.alpha == 255:
+      # Use named color for full opacity: SolidColor(Color.White), etc.
+      return f"SolidColor(Color.{named_color})"
+    elif named_color and color.alpha < 255:
+      # Use named color with alpha: SolidColor(Color.White.copy(alpha = 0.5f))
+      from ..utils.formatting import format_alpha
+      alpha_value = color.alpha / 255.0
+      return f"SolidColor(Color.{named_color}.copy(alpha = {format_alpha(alpha_value)}))"
+    else:
+      # Fallback to hex notation: SolidColor(Color(0xFFFFFFFF))
+      return f"SolidColor({color.to_compose_color()})"

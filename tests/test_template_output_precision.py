@@ -342,8 +342,8 @@ class TestTemplateOutputPrecision:
     assert "import androidx.compose.ui.geometry.Offset" in result
     assert "fill = Brush.linearGradient(" in result
     assert "colorStops = arrayOf(" in result
-    assert "0f to Color(0xFFFF0000)" in result  # Red color stop
-    assert "1f to Color(0xFF0000FF)" in result  # Blue color stop
+    assert "0f to Color.Red" in result  # Red color stop
+    assert "1f to Color.Blue" in result  # Blue color stop
     assert "start = Offset(0f, 0f)," in result
     assert "end = Offset(100f, 0f)" in result
     

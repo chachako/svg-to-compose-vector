@@ -71,10 +71,21 @@ class IrColor:
     """Extract blue component (0-255)."""
     return self.argb & 0xFF
 
-  def to_compose_color(self) -> str:
+  def to_compose_color(self, use_named_colors: bool = True) -> str:
     """Generate Compose Color constructor call."""
-    # Always use hex notation with ARGB format: Color(0xAARRGGBB)
-    # This is the standard Compose format and handles both opaque and transparent colors
+    # Try to use built-in color names for better readability
+    if use_named_colors:
+      named = self.to_compose_color_name()
+      if named and self.alpha == 255:
+        # Use named color for full opacity: Color.Red, Color.Blue, etc.
+        return f"Color.{named}"
+      elif named and self.alpha < 255:
+        # Use named color with alpha: Color.Red.copy(alpha = 0.5f)
+        from ..utils.formatting import format_alpha
+        alpha_value = self.alpha / 255.0
+        return f"Color.{named}.copy(alpha = {format_alpha(alpha_value)})"
+    
+    # Fallback to hex notation with ARGB format: Color(0xAARRGGBB)
     return f"Color(0x{self.argb:08X})"
 
   def to_compose_solid_color(self, use_named_colors: bool = True) -> str:
@@ -93,7 +104,7 @@ class IrColor:
         return f"SolidColor(Color.{named}.copy(alpha = {format_alpha(alpha_value)}))"
     
     # Fallback to hex notation
-    return f"SolidColor({self.to_compose_color()})"
+    return f"SolidColor({self.to_compose_color(use_named_colors=use_named_colors)})"
 
   def to_compose_color_name(self) -> str | None:
     """Get Compose built-in color name if this color matches one."""
