@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <!-- Rectangle with rounded corners -->
+  <rect x="10" y="10" width="60" height="40" rx="5" ry="5" 
+        fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+  
+  <!-- Circle -->
+  <circle cx="150" cy="30" r="20" 
+          fill="#e74c3c" stroke="#c0392b" stroke-width="1"/>
+  
+  <!-- Ellipse -->
+  <ellipse cx="50" cy="100" rx="30" ry="20" 
+           fill="#f39c12" stroke="#e67e22" stroke-width="1.5"/>
+  
+  <!-- Line -->
+  <line x1="120" y1="80" x2="180" y2="120" 
+        stroke="#9b59b6" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Triangle (polygon) -->
+  <polygon points="30,150 60,130 90,150 60,180" 
+           fill="#2ecc71" stroke="#27ae60" stroke-width="2"/>
+  
+  <!-- Zigzag line (polyline) -->
+  <polyline points="120,150 140,140 160,160 180,150" 
+            fill="none" stroke="#34495e" stroke-width="2" stroke-linejoin="round"/>
+</svg>

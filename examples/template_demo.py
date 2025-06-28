@@ -68,7 +68,7 @@ def main():
   if custom_template_path.exists():
     run_conversion(str(custom_template_path), "custom_template.kt", "Custom Template File")
   
-  print(f"\n✨ Demo complete! Check examples/output/ for all generated files.")
+  print("\n✨ Demo complete! Check examples/output/ for all generated files.")
 
 if __name__ == "__main__":
   main()

@@ -55,16 +55,6 @@ def main():
 
   # Demo 2: Radial Gradient
   print("\n2️⃣ Radial Gradient Demo")
-  radial_gradient_svg = '''<svg width="120" height="120" viewBox="0 0 120 120">
-    <defs>
-      <radialGradient id="spotlight" cx="50%" cy="30%" r="60%">
-        <stop offset="0%" stop-color="#ffffff" stop-opacity="1.0" />
-        <stop offset="70%" stop-color="#87ceeb" stop-opacity="0.9" />
-        <stop offset="100%" stop-color="#191970" stop-opacity="0.8" />
-      </radialGradient>
-    </defs>
-    <circle cx="60" cy="60" r="50" fill="url(#spotlight)" />
-  </svg>'''
 
   # Note: This demo shows circle path conversion since we don't have direct circle support yet
   circle_as_path_svg = '''<svg width="120" height="120" viewBox="0 0 120 120">

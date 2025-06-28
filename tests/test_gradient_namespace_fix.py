@@ -191,7 +191,7 @@ class TestGradientNamespaceFix:
 </svg>"""
     
     parser = SvgParser()
-    ir = parser.parse_svg(svg_content)
+    parser.parse_svg(svg_content)
     
     # The rect element won't be parsed as a path, but the gradient should be stored
     import xml.etree.ElementTree as ET

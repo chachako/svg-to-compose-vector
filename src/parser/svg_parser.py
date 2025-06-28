@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+import re
 from typing import List, Optional, Dict, Any, Union
 from pathlib import Path
 from ..ir.image_vector import IrImageVector
@@ -18,6 +19,7 @@ class ParseContext:
     self.parent_styles: Dict[str, str] = {}
     self.transform_stack: List[str] = []
     self.gradients: Dict[str, IrFill] = {}
+    self.warnings: List[str] = []
 
 
 class SvgParser:
@@ -76,6 +78,13 @@ class SvgParser:
     for child in svg_element:
       child_nodes = self._parse_element(child, context)
       nodes.extend(child_nodes)
+
+    # Print warnings if any unsupported elements were encountered
+    if context.warnings:
+      print("⚠️  SVG Conversion Warnings:")
+      for warning in context.warnings:
+        print(f"   • {warning}")
+      print()
 
     return IrImageVector(
       name=name,
@@ -156,11 +165,47 @@ class SvgParser:
     elif tag == "radialGradient":
       self._parse_radial_gradient(element, context)
       return []
+    elif tag == "rect":
+      return self._parse_rect_element(element, context)
+    elif tag == "circle":
+      return self._parse_circle_element(element, context)
+    elif tag == "ellipse":
+      return self._parse_ellipse_element(element, context)
+    elif tag == "line":
+      return self._parse_line_element(element, context)
+    elif tag == "polygon":
+      return self._parse_polygon_element(element, context)
+    elif tag == "polyline":
+      return self._parse_polyline_element(element, context)
     elif tag in ["style", "title", "desc", "metadata"]:
       # Skip these elements for now
       return []
+    elif tag in ["text", "tspan", "textPath"]:
+      # Text elements are not supported by Compose ImageVector
+      context.warnings.append(f"Text element '<{tag}>' is not supported by Compose ImageVector - text will be ignored")
+      return []
+    elif tag in ["marker", "use", "symbol", "switch"]:
+      # Advanced SVG features not supported by Compose ImageVector
+      context.warnings.append(f"Advanced SVG element '<{tag}>' is not supported by Compose ImageVector - element will be ignored")
+      return []
+    elif tag in ["filter", "feTurbulence", "feGaussianBlur", "feOffset", "feFlood", "feComposite"]:
+      # Filter effects not supported by Compose ImageVector
+      context.warnings.append(f"Filter element '<{tag}>' is not supported by Compose ImageVector - filters will be ignored")
+      return []
+    elif tag in ["animate", "animateTransform", "animateMotion", "set"]:
+      # Animation elements not supported by Compose ImageVector
+      context.warnings.append(f"Animation element '<{tag}>' is not supported by Compose ImageVector - animations will be ignored")
+      return []
+    elif tag in ["image", "foreignObject"]:
+      # Embedded content not supported by Compose ImageVector
+      context.warnings.append(f"Embedded content element '<{tag}>' is not supported by Compose ImageVector - content will be ignored")
+      return []
     else:
-      # For unsupported elements, try to recursively parse children
+      # For other unknown elements, check if they're unsupported first
+      if tag not in ["svg", "g", "defs", "clipPath"]:  # Known container elements
+        context.warnings.append(f"Unknown SVG element '<{tag}>' encountered - element will be ignored")
+      
+      # Try to recursively parse children
       nodes = []
       for child in element:
         child_nodes = self._parse_element(child, context)
@@ -171,6 +216,9 @@ class SvgParser:
     self, path_element: ET.Element, context: ParseContext
   ) -> List[IrVectorNode]:
     """Parse a path element."""
+    # Check for unsupported child elements first
+    self._check_unsupported_children(path_element, context)
+    
     path_data = path_element.get("d")
     if not path_data:
       return []
@@ -434,3 +482,217 @@ class SvgParser:
     
     gradient = self.gradient_parser.parse_radial_gradient(element, viewport_width, viewport_height)
     context.gradients[gradient_id] = gradient
+
+  def _parse_rect_element(self, rect_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+    """Parse rect element and convert to path."""
+    # Parse rect attributes
+    x = float(rect_element.get("x", "0"))
+    y = float(rect_element.get("y", "0"))
+    width = float(rect_element.get("width", "0"))
+    height = float(rect_element.get("height", "0"))
+    rx = float(rect_element.get("rx", "0"))
+    ry = float(rect_element.get("ry", "0"))
+
+    # Handle invalid dimensions
+    if width <= 0 or height <= 0:
+      return []
+
+    # Use symmetrical corner radius if only one is specified
+    if rx > 0 and ry == 0:
+      ry = rx
+    elif ry > 0 and rx == 0:
+      rx = ry
+
+    # Clamp corner radius to half of smaller dimension
+    max_radius = min(width, height) / 2
+    rx = min(rx, max_radius)
+    ry = min(ry, max_radius)
+
+    # Generate path data for rectangle
+    if rx == 0 and ry == 0:
+      # Simple rectangle without rounded corners
+      path_data = f"M{x},{y} L{x + width},{y} L{x + width},{y + height} L{x},{y + height} Z"
+    else:
+      # Rounded rectangle with arc commands
+      path_data = (
+        f"M{x + rx},{y} "
+        f"L{x + width - rx},{y} "
+        f"A{rx},{ry} 0 0 1 {x + width},{y + ry} "
+        f"L{x + width},{y + height - ry} "
+        f"A{rx},{ry} 0 0 1 {x + width - rx},{y + height} "
+        f"L{x + rx},{y + height} "
+        f"A{rx},{ry} 0 0 1 {x},{y + height - ry} "
+        f"L{x},{y + ry} "
+        f"A{rx},{ry} 0 0 1 {x + rx},{y} Z"
+      )
+
+    return self._convert_path_data_to_vector_path(path_data, rect_element, context)
+
+  def _parse_circle_element(self, circle_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+    """Parse circle element and convert to path."""
+    cx = float(circle_element.get("cx", "0"))
+    cy = float(circle_element.get("cy", "0"))
+    r = float(circle_element.get("r", "0"))
+
+    if r <= 0:
+      return []
+
+    # Generate path data for circle using four arc commands
+    path_data = (
+      f"M{cx - r},{cy} "
+      f"A{r},{r} 0 0 1 {cx},{cy - r} "
+      f"A{r},{r} 0 0 1 {cx + r},{cy} "
+      f"A{r},{r} 0 0 1 {cx},{cy + r} "
+      f"A{r},{r} 0 0 1 {cx - r},{cy} Z"
+    )
+
+    return self._convert_path_data_to_vector_path(path_data, circle_element, context)
+
+  def _parse_ellipse_element(self, ellipse_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+    """Parse ellipse element and convert to path."""
+    cx = float(ellipse_element.get("cx", "0"))
+    cy = float(ellipse_element.get("cy", "0"))
+    rx = float(ellipse_element.get("rx", "0"))
+    ry = float(ellipse_element.get("ry", "0"))
+
+    if rx <= 0 or ry <= 0:
+      return []
+
+    # Generate path data for ellipse using four arc commands
+    path_data = (
+      f"M{cx - rx},{cy} "
+      f"A{rx},{ry} 0 0 1 {cx},{cy - ry} "
+      f"A{rx},{ry} 0 0 1 {cx + rx},{cy} "
+      f"A{rx},{ry} 0 0 1 {cx},{cy + ry} "
+      f"A{rx},{ry} 0 0 1 {cx - rx},{cy} Z"
+    )
+
+    return self._convert_path_data_to_vector_path(path_data, ellipse_element, context)
+
+  def _parse_line_element(self, line_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+    """Parse line element and convert to path."""
+    x1 = float(line_element.get("x1", "0"))
+    y1 = float(line_element.get("y1", "0"))
+    x2 = float(line_element.get("x2", "0"))
+    y2 = float(line_element.get("y2", "0"))
+
+    # Generate path data for line
+    path_data = f"M{x1},{y1} L{x2},{y2}"
+
+    return self._convert_path_data_to_vector_path(path_data, line_element, context)
+
+  def _parse_polygon_element(self, polygon_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+    """Parse polygon element and convert to path."""
+    points_str = polygon_element.get("points", "")
+    if not points_str:
+      return []
+
+    points = self._parse_points_string(points_str)
+    if len(points) < 3:  # Polygon needs at least 3 points
+      return []
+
+    # Generate path data for polygon
+    path_data = f"M{points[0][0]},{points[0][1]}"
+    for x, y in points[1:]:
+      path_data += f" L{x},{y}"
+    path_data += " Z"  # Close the polygon
+
+    return self._convert_path_data_to_vector_path(path_data, polygon_element, context)
+
+  def _parse_polyline_element(self, polyline_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+    """Parse polyline element and convert to path."""
+    points_str = polyline_element.get("points", "")
+    if not points_str:
+      return []
+
+    points = self._parse_points_string(points_str)
+    if len(points) < 2:  # Polyline needs at least 2 points
+      return []
+
+    # Generate path data for polyline (no Z command - open path)
+    path_data = f"M{points[0][0]},{points[0][1]}"
+    for x, y in points[1:]:
+      path_data += f" L{x},{y}"
+
+    return self._convert_path_data_to_vector_path(path_data, polyline_element, context)
+
+  def _parse_points_string(self, points_str: str) -> List[tuple[float, float]]:
+    """Parse points string into list of coordinate pairs."""
+    # Clean up the points string - handle various separators
+    points_str = points_str.strip()
+    
+    # Replace commas and multiple spaces with single spaces
+    points_str = re.sub(r'[,\s]+', ' ', points_str)
+    
+    # Split into individual numbers
+    coords = points_str.split()
+    
+    # Group into coordinate pairs
+    points = []
+    for i in range(0, len(coords) - 1, 2):
+      try:
+        x = float(coords[i])
+        y = float(coords[i + 1])
+        points.append((x, y))
+      except (ValueError, IndexError):
+        # Skip invalid coordinate pairs
+        continue
+    
+    return points
+
+  def _convert_path_data_to_vector_path(self, path_data: str, element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+    """Convert path data string to IrVectorPath using existing path parser."""
+    # First check for any unsupported child elements
+    self._check_unsupported_children(element, context)
+    
+    try:
+      path_nodes = self.path_parser.parse_path_data(path_data)
+    except Exception as e:
+      print(f"Warning: Failed to parse generated path data '{path_data}': {e}")
+      return []
+
+    if not path_nodes:
+      return []
+
+    # Parse styles using existing methods
+    fill_color = self._parse_fill(element, context)
+    stroke_color = self._parse_stroke(element, context)
+    stroke_width = self._parse_stroke_width(element)
+    stroke_opacity = self._parse_stroke_opacity(element)
+    fill_opacity = self._parse_fill_opacity(element)
+    stroke_linecap = self._parse_stroke_linecap(element)
+    stroke_linejoin = self._parse_stroke_linejoin(element)
+    name = element.get("id", element.tag.split("}")[-1])
+
+    vector_path = IrVectorPath(
+      paths=path_nodes,
+      name=name,
+      fill=fill_color,
+      stroke=stroke_color,
+      stroke_line_width=stroke_width,
+      stroke_alpha=stroke_opacity,
+      fill_alpha=fill_opacity,
+      stroke_line_cap=stroke_linecap,
+      stroke_line_join=stroke_linejoin,
+    )
+
+    return [vector_path]
+
+  def _check_unsupported_children(self, element: ET.Element, context: ParseContext) -> None:
+    """Check for unsupported child elements and add warnings."""
+    for child in element:
+      tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+      
+      if tag in ["text", "tspan", "textPath"]:
+        context.warnings.append(f"Text element '<{tag}>' is not supported by Compose ImageVector - text will be ignored")
+      elif tag in ["marker", "use", "symbol", "switch"]:
+        context.warnings.append(f"Advanced SVG element '<{tag}>' is not supported by Compose ImageVector - element will be ignored")
+      elif tag in ["filter", "feTurbulence", "feGaussianBlur", "feOffset", "feFlood", "feComposite"]:
+        context.warnings.append(f"Filter element '<{tag}>' is not supported by Compose ImageVector - filters will be ignored")
+      elif tag in ["animate", "animateTransform", "animateMotion", "set"]:
+        context.warnings.append(f"Animation element '<{tag}>' is not supported by Compose ImageVector - animations will be ignored")
+      elif tag in ["image", "foreignObject"]:
+        context.warnings.append(f"Embedded content element '<{tag}>' is not supported by Compose ImageVector - content will be ignored")
+      
+      # Recursively check nested children
+      self._check_unsupported_children(child, context)
