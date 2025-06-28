@@ -4,8 +4,10 @@ from pathlib import Path
 from ..ir.image_vector import IrImageVector
 from ..ir.vector_node import IrVectorNode, IrVectorPath, IrVectorGroup
 from ..ir.color import IrColor
+from ..ir.gradient import IrFill, IrColorFill, IrLinearGradient, IrRadialGradient
 from .path_parser import PathParser
 from .transform_parser import TransformParser
+from .gradient_parser import GradientParser
 
 
 class ParseContext:
@@ -15,6 +17,7 @@ class ParseContext:
     self.defs_cache: Dict[str, Any] = {}
     self.parent_styles: Dict[str, str] = {}
     self.transform_stack: List[str] = []
+    self.gradients: Dict[str, IrFill] = {}
 
 
 class SvgParser:
@@ -23,6 +26,7 @@ class SvgParser:
   def __init__(self):
     self.path_parser = PathParser()
     self.transform_parser = TransformParser()
+    self.gradient_parser = GradientParser()
 
   def parse_svg(self, input_source: Union[str, Path]) -> IrImageVector:
     """Parse SVG from file path (Path) or SVG content (str)."""
@@ -144,7 +148,15 @@ class SvgParser:
       return self._parse_path_element(element, context)
     elif tag == "g":
       return self._parse_group_element(element, context)
-    elif tag in ["defs", "style", "title", "desc", "metadata"]:
+    elif tag == "defs":
+      return self._parse_defs_element(element, context)
+    elif tag == "linearGradient":
+      self._parse_linear_gradient(element, context)
+      return []
+    elif tag == "radialGradient":
+      self._parse_radial_gradient(element, context)
+      return []
+    elif tag in ["style", "title", "desc", "metadata"]:
       # Skip these elements for now
       return []
     else:
@@ -174,7 +186,7 @@ class SvgParser:
       return []
 
     # Parse styles
-    fill_color = self._parse_fill(path_element)
+    fill_color = self._parse_fill(path_element, context)
     stroke_color = self._parse_stroke(path_element)
     stroke_width = self._parse_stroke_width(path_element)
     stroke_opacity = self._parse_stroke_opacity(path_element)
@@ -233,12 +245,21 @@ class SvgParser:
     
     return [group]
 
-  def _parse_fill(self, element: ET.Element) -> Optional[IrColor]:
-    """Parse fill attribute."""
+  def _parse_fill(self, element: ET.Element, context: ParseContext) -> Optional[IrFill]:
+    """Parse fill attribute, supporting colors and gradients."""
     fill_str = self._get_attribute_or_style(element, "fill")
 
     if fill_str == "none":
       return None
+
+    # Check for gradient reference (url(#gradientId))
+    if fill_str.startswith("url(#") and fill_str.endswith(")"):
+      gradient_id = fill_str[5:-1]  # Remove "url(#" and ")"
+      if gradient_id in context.gradients:
+        return context.gradients[gradient_id]
+      else:
+        # Gradient not found, fallback to black
+        return IrColorFill(color=IrColor(argb=0xFF000000))
 
     # Default to black when no fill attribute specified (SVG spec default)
     if not fill_str:
@@ -250,12 +271,12 @@ class SvgParser:
 
       color = parse_color(fill_str)
       if color is not None:
-        return color
+        return IrColorFill(color=color)
     except (ValueError, ImportError):
       pass
 
     # Fallback to black if we can't parse
-    return IrColor.from_hex("#000000")
+    return IrColorFill(color=IrColor.from_hex("#000000"))
 
   def _parse_stroke(self, element: ET.Element) -> Optional[IrColor]:
     """Parse stroke attribute."""
@@ -371,3 +392,36 @@ class SvgParser:
 
     # Fall back to direct attribute
     return element.get(attr_name, "")
+
+  def _parse_defs_element(self, defs_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+    """Parse defs element, which contains reusable elements like gradients."""
+    # Process all children and cache them
+    for child in defs_element:
+      self._parse_element(child, context)
+    return []
+
+  def _parse_linear_gradient(self, element: ET.Element, context: ParseContext) -> None:
+    """Parse linearGradient element and store in context."""
+    gradient_id = element.get("id")
+    if not gradient_id:
+      return
+
+    # Use a reasonable viewport size for gradient calculations
+    viewport_width = 100.0
+    viewport_height = 100.0
+    
+    gradient = self.gradient_parser.parse_linear_gradient(element, viewport_width, viewport_height)
+    context.gradients[gradient_id] = gradient
+
+  def _parse_radial_gradient(self, element: ET.Element, context: ParseContext) -> None:
+    """Parse radialGradient element and store in context."""
+    gradient_id = element.get("id")
+    if not gradient_id:
+      return
+
+    # Use a reasonable viewport size for gradient calculations
+    viewport_width = 100.0
+    viewport_height = 100.0
+    
+    gradient = self.gradient_parser.parse_radial_gradient(element, viewport_width, viewport_height)
+    context.gradients[gradient_id] = gradient

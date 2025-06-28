@@ -2,6 +2,7 @@ from typing import List, Set
 from ..ir.image_vector import IrImageVector
 from ..ir.vector_node import IrVectorNode, IrVectorPath, IrVectorGroup
 from ..ir.path_node import path_data_to_dsl
+from ..ir.gradient import IrFill, IrColorFill, IrLinearGradient, IrRadialGradient
 from ..utils.formatting import format_float, format_dp
 
 
@@ -75,9 +76,8 @@ class ImageVectorGenerator:
       lines.append(f"{indent}path(")
 
       if path.fill is not None:
-        self.imports.add("androidx.compose.ui.graphics.Color")
-        self.imports.add("androidx.compose.ui.graphics.SolidColor")
-        lines.append(f"{indent}  fill = {path.fill.to_compose_solid_color()},")
+        fill_code = self._generate_fill_code(path.fill, indent_level=2)
+        lines.append(f"{indent}  fill = {fill_code},")
 
       if path.stroke is not None:
         self.imports.add("androidx.compose.ui.graphics.Color")
@@ -216,3 +216,21 @@ class ImageVectorGenerator:
   def get_required_imports(self) -> List[str]:
     """Get list of required imports for generated code."""
     return sorted(list(self.imports))
+
+  def _generate_fill_code(self, fill: IrFill, indent_level: int = 2) -> str:
+    """Generate Compose code for fill (color or gradient)."""
+    if isinstance(fill, IrColorFill):
+      self.imports.add("androidx.compose.ui.graphics.Color")
+      self.imports.add("androidx.compose.ui.graphics.SolidColor")
+      return fill.color.to_compose_solid_color()
+    elif isinstance(fill, (IrLinearGradient, IrRadialGradient)):
+      self.imports.add("androidx.compose.ui.graphics.Brush")
+      self.imports.add("androidx.compose.ui.geometry.Offset")
+      # Calculate proper indentation for gradient parameters
+      gradient_indent = "  " * (indent_level + 1)
+      return fill.to_compose_code(indent=gradient_indent)
+    else:
+      # Fallback to black solid color
+      self.imports.add("androidx.compose.ui.graphics.Color")
+      self.imports.add("androidx.compose.ui.graphics.SolidColor")
+      return "SolidColor(Color.Black)"
