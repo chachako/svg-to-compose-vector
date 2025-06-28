@@ -1,0 +1,15 @@
+{{- imports }}
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+
+@Composable
+fun {{ icon_name }}Icon(
+  modifier: Modifier = Modifier,
+  tint: Color = Color.Unspecified
+): ImageVector {
+  return remember {
+    {{ build_code | indent(4, first=False) }}
+  }
+}

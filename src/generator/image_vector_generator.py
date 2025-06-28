@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import List, Set, Tuple
 from ..ir.image_vector import IrImageVector
 from ..ir.vector_node import IrVectorNode, IrVectorPath, IrVectorGroup
 from ..ir.path_node import path_data_to_dsl
@@ -15,6 +15,11 @@ class ImageVectorGenerator:
 
   def generate(self, ir: IrImageVector) -> str:
     """Generate complete ImageVector.Builder(...).build() code."""
+    core_code, _ = self.generate_core_code(ir)
+    return core_code
+
+  def generate_core_code(self, ir: IrImageVector) -> Tuple[str, Set[str]]:
+    """Generate ImageVector.Builder(...).build() code and return imports."""
     self.imports.clear()
     self.indent_level = 0
 
@@ -42,7 +47,7 @@ class ImageVectorGenerator:
 
     lines.append("}.build()")
 
-    return "\n".join(lines)
+    return "\n".join(lines), self.imports.copy()
 
   def _generate_node(self, node: IrVectorNode) -> List[str]:
     """Generate code for a vector node (path or group)."""

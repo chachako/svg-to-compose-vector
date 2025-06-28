@@ -8,6 +8,8 @@ from typing import Optional
 
 from .parser.svg_parser import SvgParser
 from .generator.image_vector_generator import ImageVectorGenerator
+from .generator.template_engine import TemplateEngine
+from .core.config import Config
 
 
 @click.group(invoke_without_command=True)
@@ -33,21 +35,23 @@ def cli(ctx):
   "--name", "-n", type=str, help="Name for the ImageVector. Defaults to input filename."
 )
 @click.option(
-  "--wrapper-start",
-  "-ws",
+  "--template",
+  "-t",
   type=str,
-  default="",
-  help='Code to insert before ImageVector.Builder. e.g., "val MyIcon: ImageVector = "',
+  help="Template to use. Built-in options: default, composable_function, icon_object, or path to custom template file.",
 )
 @click.option(
-  "--wrapper-end", "-we", type=str, default="", help='Code to insert after .build(). e.g., ""'
+  "--config",
+  "-c",
+  type=click.Path(exists=True, path_type=Path),
+  help="Path to configuration file.",
 )
 def convert(
   input_file: Path,
   output: Optional[Path],
   name: Optional[str],
-  wrapper_start: str,
-  wrapper_end: str,
+  template: Optional[str],
+  config: Optional[Path],
 ):
   """Convert SVG file to Kotlin Compose ImageVector code.
 
@@ -59,10 +63,25 @@ def convert(
     # Convert to file
     svg2compose convert icon.svg -o Icon.kt
 
-    # With custom wrapper
-    svg2compose convert icon.svg -ws "val HomeIcon: ImageVector = " -o HomeIcon.kt
+    # With template
+    svg2compose convert icon.svg -t composable_function -o HomeIcon.kt
+
+    # With custom template file
+    svg2compose convert icon.svg -t my_template.j2 -o CustomIcon.kt
   """
   try:
+    # Load configuration
+    config_obj = Config()
+    if config:
+      config_obj = Config.from_file(config)
+
+    # Handle custom template file
+    if template and Path(template).exists():
+      config_obj.template_path = Path(template)
+      template_name = "default"  # Use default processing for custom files
+    else:
+      template_name = template or "default"
+
     # Read SVG file
     svg_content = input_file.read_text(encoding="utf-8")
 
@@ -79,10 +98,16 @@ def convert(
 
     # Generate Kotlin code
     generator = ImageVectorGenerator()
-    core_code = generator.generate(ir)
+    core_code, imports = generator.generate_core_code(ir)
 
-    # Apply wrapper
-    final_code = wrapper_start + core_code + wrapper_end
+    # Apply template
+    template_engine = TemplateEngine(config_obj)
+    final_code = template_engine.render(
+      template_name=template_name,
+      build_code=core_code,
+      imports=imports,
+      icon_name=ir.name
+    )
 
     # Output result
     if output:
@@ -129,6 +154,24 @@ def info(input_file: Path):
   except Exception as e:
     click.echo(f"Error: {e}", err=True)
     sys.exit(1)
+
+
+@cli.command()
+def templates():
+  """List available built-in templates."""
+  try:
+    template_engine = TemplateEngine(Config())
+    available_templates = template_engine.list_available_templates()
+    
+    click.echo("Available built-in templates:")
+    for template_name in available_templates:
+      click.echo(f"  - {template_name}")
+    
+    if not available_templates:
+      click.echo("No templates found. Please check installation.")
+      
+  except Exception as e:
+    click.echo(f"Error listing templates: {e}", err=True)
 
 
 @cli.command()

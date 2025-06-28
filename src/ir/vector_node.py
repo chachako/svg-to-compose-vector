@@ -1,8 +1,11 @@
 from abc import ABC
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
+from typing import List, Optional, Union, TYPE_CHECKING
 from .path_node import IrPathNode
 from .color import IrColor
+
+if TYPE_CHECKING:
+  from .gradient import IrFill
 
 
 @dataclass
