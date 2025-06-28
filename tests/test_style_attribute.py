@@ -163,7 +163,7 @@ def test_style_attribute_integration():
   generator = ImageVectorGenerator()
   code = generator.generate(ir)
 
-  # Should include both RGB and HSL color conversions
-  assert "fill = Color(0xCCFF0000)" in code  # RGBA(255,0,0,0.8) = alpha 0.8*255=204=0xCC
-  assert "stroke = Color(0xFF0000FF)" in code  # HSL blue
+  # Should include both RGB and HSL color conversions with smart naming
+  assert "fill = SolidColor(Color.Red.copy(alpha = 0.800000f))" in code  # RGBA(255,0,0,0.8)
+  assert "stroke = SolidColor(Color.Blue)" in code  # HSL blue
   assert "strokeLineWidth = 2.0f" in code

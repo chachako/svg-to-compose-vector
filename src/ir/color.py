@@ -77,19 +77,82 @@ class IrColor:
     # This is the standard Compose format and handles both opaque and transparent colors
     return f"Color(0x{self.argb:08X})"
 
+  def to_compose_solid_color(self, use_named_colors: bool = True) -> str:
+    """Generate Compose SolidColor constructor call for use as Brush."""
+    # For use as fill/stroke in path()
+    if use_named_colors:
+      named = self.to_compose_color_name()
+      if named and self.alpha == 255:
+        # Use named color for full opacity colors like Color.Red
+        return f"SolidColor(Color.{named})"
+      elif named and self.alpha < 255:
+        # Use named color with alpha like Color.Red.copy(alpha = 0.5f)
+        alpha_value = self.alpha / 255.0
+        return f"SolidColor(Color.{named}.copy(alpha = {alpha_value:.6f}f))"
+    
+    # Fallback to hex notation
+    return f"SolidColor({self.to_compose_color()})"
+
+  def to_compose_color_name(self) -> str | None:
+    """Get Compose built-in color name if this color matches one."""
+    # Check for exact matches with Compose built-in colors
+    for name, color in COMPOSE_BUILTIN_COLORS.items():
+      if self.argb == color.argb:
+        return name.capitalize()
+    
+    # Check for RGB matches (ignoring alpha) for transparent versions
+    for name, color in COMPOSE_BUILTIN_COLORS.items():
+      if (self.red, self.green, self.blue) == (color.red, color.green, color.blue):
+        return name.capitalize()
+    
+    return None
+
+  def is_transparent(self) -> bool:
+    """Check if this color is fully transparent."""
+    return self.alpha == 0
+
   def __str__(self) -> str:
     return self.to_compose_color()
 
 
-# Named colors from CSS3 specification
-NAMED_COLORS = {
+# Cached SVG color keywords (populated lazily)
+_svg_color_cache: dict[str, IrColor] = {}
+
+# Compose built-in colors that can be used as Color.Name
+# Only these colors are available as named constants in Compose
+COMPOSE_BUILTIN_COLORS = {
   "black": IrColor.from_rgb(0, 0, 0),
+  "darkgray": IrColor.from_rgb(68, 68, 68),  
+  "gray": IrColor.from_rgb(136, 136, 136),
+  "lightgray": IrColor.from_rgb(204, 204, 204),
   "white": IrColor.from_rgb(255, 255, 255),
   "red": IrColor.from_rgb(255, 0, 0),
-  "green": IrColor.from_rgb(0, 128, 0),
+  "green": IrColor.from_rgb(0, 255, 0),  # Note: Compose Green is #00FF00, not #008000
   "blue": IrColor.from_rgb(0, 0, 255),
+  "yellow": IrColor.from_rgb(255, 255, 0),
+  "cyan": IrColor.from_rgb(0, 255, 255),
+  "magenta": IrColor.from_rgb(255, 0, 255),
   "transparent": IrColor.from_rgb(0, 0, 0, 0),
 }
+
+
+def _get_svg_color(color_name: str) -> IrColor | None:
+  """Get SVG color by name with lazy loading and caching."""
+  if color_name not in _svg_color_cache:
+    from .svg_colors import SVG_COLOR_HEX_MAP
+    
+    if color_name in SVG_COLOR_HEX_MAP:
+      hex_value = SVG_COLOR_HEX_MAP[color_name]
+      if hex_value.startswith("#") and len(hex_value) == 9:
+        # Handle transparent colors with alpha
+        _svg_color_cache[color_name] = IrColor.from_hex(hex_value)
+      else:
+        # Regular hex colors
+        _svg_color_cache[color_name] = IrColor.from_hex(hex_value)
+    else:
+      return None
+  
+  return _svg_color_cache.get(color_name)
 
 
 def parse_color(color_string: str) -> Union[IrColor, None]:
@@ -97,11 +160,13 @@ def parse_color(color_string: str) -> Union[IrColor, None]:
   color_string = color_string.strip().lower()
 
   # SVG "none" means no fill/stroke should be applied
-  if color_string == "none" or color_string == "transparent":
+  if color_string == "none":
     return None
 
-  if color_string in NAMED_COLORS:
-    return NAMED_COLORS[color_string]
+  # Check for SVG color keywords with lazy loading
+  svg_color = _get_svg_color(color_string)
+  if svg_color is not None:
+    return svg_color
 
   if color_string.startswith("#"):
     return IrColor.from_hex(color_string)

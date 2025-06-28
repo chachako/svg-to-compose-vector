@@ -75,11 +75,13 @@ class ImageVectorGenerator:
 
       if path.fill is not None:
         self.imports.add("androidx.compose.ui.graphics.Color")
-        lines.append(f"{indent}  fill = {path.fill.to_compose_color()},")
+        self.imports.add("androidx.compose.ui.graphics.SolidColor")
+        lines.append(f"{indent}  fill = {path.fill.to_compose_solid_color()},")
 
       if path.stroke is not None:
         self.imports.add("androidx.compose.ui.graphics.Color")
-        lines.append(f"{indent}  stroke = {path.stroke.to_compose_color()},")
+        self.imports.add("androidx.compose.ui.graphics.SolidColor")
+        lines.append(f"{indent}  stroke = {path.stroke.to_compose_solid_color()},")
 
       if path.fill_alpha != 1.0:
         lines.append(f"{indent}  fillAlpha = {path.fill_alpha}f,")

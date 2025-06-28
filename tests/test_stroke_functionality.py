@@ -86,7 +86,7 @@ class TestStrokeFunctionality:
     code = generator.generate(ir)
 
     # Check that stroke attributes are included in generated code
-    assert "stroke = Color(0xFF00FF00)" in code
+    assert "stroke = SolidColor(Color.Green)" in code
     assert "strokeLineWidth = 3.0f" in code
     assert "strokeAlpha = 0.7f" in code
     assert "strokeLineCap = StrokeCap.Round" in code
@@ -112,8 +112,8 @@ class TestStrokeFunctionality:
     code = generator.generate(ir)
 
     # Both stroke and fill should be present
-    assert "fill = Color(0xFF0000FF)" in code  # Blue
-    assert "stroke = Color(0xFFFF0000)" in code  # Red
+    assert "fill = SolidColor(Color.Blue)" in code  # Blue
+    assert "stroke = SolidColor(Color.Red)" in code  # Red
     assert "strokeLineWidth = 1.0f" in code
 
   def test_no_stroke_when_not_specified(self):
@@ -173,8 +173,8 @@ def test_stroke_integration_example():
   code = generator.generate(ir)
 
   expected_elements = [
-    "fill = Color(0xFFFFEB3B)",
-    "stroke = Color(0xFF2196F3)",
+    "fill = SolidColor(Color(0xFFFFEB3B))",
+    "stroke = SolidColor(Color(0xFF2196F3))",
     "fillAlpha = 0.6f",
     "strokeAlpha = 0.8f",
     "strokeLineWidth = 4.0f",

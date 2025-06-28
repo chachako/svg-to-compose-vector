@@ -195,5 +195,5 @@ def test_svg_parser_integration():
   assert 'name = "star"' in kotlin_code
   assert "viewportWidth = 24.0f" in kotlin_code
   assert "path(" in kotlin_code
-  assert "fill = Color(0xFFFFCC00)" in kotlin_code  # Gold color
+  assert "fill = SolidColor(Color(0xFFFFCC00))" in kotlin_code  # Gold color
   assert ".build()" in kotlin_code

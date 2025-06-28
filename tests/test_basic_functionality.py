@@ -61,7 +61,7 @@ def test_image_vector_generator():
   assert "defaultWidth = 24.0.dp" in kotlin_code
   assert "viewportWidth = 24.0f" in kotlin_code
   assert "path(" in kotlin_code
-  assert "fill = Color(0xFFFF0000)" in kotlin_code
+  assert "fill = SolidColor(Color.Red)" in kotlin_code
   assert "moveTo(0.0f, 0.0f)" in kotlin_code
   assert "close()" in kotlin_code
   assert ".build()" in kotlin_code
