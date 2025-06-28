@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
-from typing import Optional, List
-from ..ir.gradient import IrLinearGradient, IrRadialGradient, IrColorStop, IrFill
+from typing import List
+from ..ir.gradient import IrLinearGradient, IrRadialGradient, IrColorStop
 from ..ir.color import IrColor
 
 
@@ -61,7 +61,13 @@ class GradientParser:
     """Parse stop elements from gradient."""
     stops = []
     
-    for stop_element in gradient_element.findall(".//stop"):
+    # Handle both namespaced and non-namespaced stop elements
+    stop_elements = []
+    for elem in gradient_element.iter():
+      if elem.tag == "stop" or elem.tag.endswith("}stop"):
+        stop_elements.append(elem)
+    
+    for stop_element in stop_elements:
       # Parse offset
       offset_str = stop_element.get("offset", "0")
       if offset_str.endswith("%"):
