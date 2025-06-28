@@ -2,9 +2,10 @@ import xml.etree.ElementTree as ET
 from typing import List, Optional, Dict, Any, Union
 from pathlib import Path
 from ..ir.image_vector import IrImageVector
-from ..ir.vector_node import IrVectorNode, IrVectorPath
+from ..ir.vector_node import IrVectorNode, IrVectorPath, IrVectorGroup
 from ..ir.color import IrColor
 from .path_parser import PathParser
+from .transform_parser import TransformParser
 
 
 class ParseContext:
@@ -21,6 +22,7 @@ class SvgParser:
 
   def __init__(self):
     self.path_parser = PathParser()
+    self.transform_parser = TransformParser()
 
   def parse_svg(self, input_source: Union[str, Path]) -> IrImageVector:
     """Parse SVG from file path (Path) or SVG content (str)."""
@@ -198,13 +200,38 @@ class SvgParser:
   def _parse_group_element(
     self, group_element: ET.Element, context: ParseContext
   ) -> List[IrVectorNode]:
-    """Parse a group element."""
-    # For now, just flatten groups and parse children
-    nodes = []
+    """Parse a group element with support for transforms."""
+    # Parse group attributes
+    group_name = group_element.get("id", "group")
+    transform_str = group_element.get("transform", "")
+    
+    # Parse child elements
+    children = []
     for child in group_element:
       child_nodes = self._parse_element(child, context)
-      nodes.extend(child_nodes)
-    return nodes
+      children.extend(child_nodes)
+    
+    # If no children, return empty list
+    if not children:
+      return []
+    
+    # Parse transform if present
+    transform_params = {}
+    if transform_str:
+      transform_params = self.transform_parser.parse_transform_to_group_params(transform_str)
+    
+    # If no transform and only one child, we can flatten to avoid unnecessary nesting
+    if not transform_params and len(children) == 1:
+      return children
+    
+    # Create group node
+    group = IrVectorGroup(
+      children=children,
+      name=group_name,
+      **transform_params
+    )
+    
+    return [group]
 
   def _parse_fill(self, element: ET.Element) -> Optional[IrColor]:
     """Parse fill attribute."""

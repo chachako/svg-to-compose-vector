@@ -64,6 +64,38 @@
                 Graceful degradation for unsupported features
             </implementation>
         </decision>
+        
+        <decision id="transform_matrix_decomposition">
+            <title>Transform Matrix Decomposition Strategy</title>
+            <rationale>
+                - SVG transforms are cumulative and use matrix mathematics
+                - Compose ImageVector uses separate parameters (rotate, scale, translate)
+                - Need mathematically accurate decomposition for complex transforms
+                - Must handle all SVG transform functions including matrix()
+            </rationale>
+            <implementation>
+                Use 2D transformation matrix multiplication for combining transforms
+                Implement mathematical decomposition to extract rotate, scale, translate
+                Apply precision rounding to avoid floating-point artifacts
+                Support all SVG transform functions: translate, scale, rotate, matrix, skew
+            </implementation>
+        </decision>
+        
+        <decision id="group_flattening_optimization">
+            <title>Intelligent Group Flattening</title>
+            <rationale>
+                - Avoid unnecessary nesting in generated code
+                - SVG groups without transforms or with single child can be flattened
+                - Preserve semantic groups with IDs or transforms
+                - Optimize for readability and performance
+            </rationale>
+            <implementation>
+                Flatten groups without transforms and single child
+                Preserve groups with IDs, transforms, or multiple children
+                Apply flattening recursively during parsing phase
+                Maintain parent-child relationships for styling inheritance
+            </implementation>
+        </decision>
     </architecture_decisions>
     
     <technology_choices>

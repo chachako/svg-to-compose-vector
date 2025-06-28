@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Base layer with translation -->
+  <g id="base-layer" transform="translate(2, 2)">
+    <!-- Background circle with scaling -->
+    <g id="background" transform="scale(0.9)">
+      <path d="M 10 0 A 10 10 0 1 1 -10 0 A 10 10 0 1 1 10 0 Z" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/>
+    </g>
+    
+    <!-- Foreground elements with rotation -->
+    <g id="foreground" transform="translate(5, 5) rotate(45)">
+      <!-- Central square -->
+      <path d="M -2 -2 L 2 -2 L 2 2 L -2 2 Z" fill="#2196f3"/>
+      
+      <!-- Corner accents -->
+      <g id="accents" transform="scale(0.5)">
+        <path d="M -6 -6 L -4 -6 L -4 -4 L -6 -4 Z" fill="#ff5722"/>
+        <path d="M 4 -6 L 6 -6 L 6 -4 L 4 -4 Z" fill="#ff5722"/>
+        <path d="M 4 4 L 6 4 L 6 6 L 4 6 Z" fill="#ff5722"/>
+        <path d="M -6 4 L -4 4 L -4 6 L -6 6 Z" fill="#ff5722"/>
+      </g>
+    </g>
+  </g>
+</svg>

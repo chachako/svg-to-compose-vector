@@ -88,7 +88,7 @@ class TestSvgParser:
     assert ir.viewport_height == 24.0
 
   def test_svg_with_group_element(self):
-    """Test SVG with group element (should flatten for now)."""
+    """Test SVG with group element (now preserves groups with IDs)."""
     group_svg = """<svg width="50" height="50" viewBox="0 0 50 50">
       <g id="shapes">
         <path d="M 10 10 L 40 10 L 40 40 L 10 40 Z" fill="blue"/>
@@ -99,9 +99,14 @@ class TestSvgParser:
     parser = SvgParser()
     ir = parser.parse_svg(group_svg)
 
-    # Should have 2 paths (flattened from group)
-    assert len(ir.nodes) == 2
-    assert all(isinstance(node, IrVectorPath) for node in ir.nodes)
+    # Should have 1 group with 2 paths inside (since group has ID, it's preserved)
+    assert len(ir.nodes) == 1
+    from src.ir.vector_node import IrVectorGroup
+    assert isinstance(ir.nodes[0], IrVectorGroup)
+    group = ir.nodes[0]
+    assert group.name == "shapes"
+    assert len(group.children) == 2
+    assert all(isinstance(child, IrVectorPath) for child in group.children)
 
   def test_svg_with_named_colors(self):
     """Test SVG with named colors."""

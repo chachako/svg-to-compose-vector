@@ -123,8 +123,9 @@ class ImageVectorGenerator:
     lines = []
     indent = "  " * self.indent_level
 
-    # Check if any transform parameters differ from defaults
-    # Compose group() without parameters is cleaner when no transforms are applied
+    # Check if any parameters differ from defaults (including name)
+    # Compose group() without parameters is cleaner when no parameters are needed
+    has_name = group.name and group.name.strip()
     has_transform = (
       group.rotation != 0.0
       or group.pivot_x != 0.0
@@ -135,8 +136,12 @@ class ImageVectorGenerator:
       or group.translation_y != 0.0
     )
 
-    if has_transform:
+    if has_name or has_transform:
       lines.append(f"{indent}group(")
+
+      # Name parameter comes first (if present)
+      if has_name:
+        lines.append(f'{indent}  name = "{group.name}",')
 
       if group.rotation != 0.0:
         lines.append(f"{indent}  rotate = {group.rotation}f,")
