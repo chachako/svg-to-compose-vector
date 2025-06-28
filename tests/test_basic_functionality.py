@@ -22,12 +22,12 @@ def test_path_parser_basic_commands():
   """Test PathParser with basic SVG commands."""
   parser = PathParser()
   path_data = parser.parse_path_data("M 0 0 L 24 0 L 24 24 L 0 24 Z")
-  
+
   assert len(path_data) == 5
   assert isinstance(path_data[0], IrMoveTo)
   assert isinstance(path_data[1], IrLineTo)
   assert isinstance(path_data[4], IrClose)
-  
+
   assert path_data[0].x == 0.0 and path_data[0].y == 0.0
   assert path_data[1].x == 24.0 and path_data[1].y == 0.0
 
@@ -37,24 +37,24 @@ def test_image_vector_generator():
   # Parse path data
   parser = PathParser()
   path_data = parser.parse_path_data("M 0 0 L 24 0 L 24 24 L 0 24 Z")
-  
+
   # Create IR structures
   red_color = IrColor.from_hex("#FF0000")
   path = IrVectorPath(paths=path_data, fill=red_color)
-  
+
   image_vector = IrImageVector(
     name="TestIcon",
     default_width=24.0,
     default_height=24.0,
     viewport_width=24.0,
     viewport_height=24.0,
-    nodes=[path]
+    nodes=[path],
   )
-  
+
   # Generate Kotlin code
   generator = ImageVectorGenerator()
   kotlin_code = generator.generate(image_vector)
-  
+
   # Verify output contains expected elements
   assert "ImageVector.Builder(" in kotlin_code
   assert 'name = "TestIcon"' in kotlin_code
@@ -65,7 +65,7 @@ def test_image_vector_generator():
   assert "moveTo(0.0f, 0.0f)" in kotlin_code
   assert "close()" in kotlin_code
   assert ".build()" in kotlin_code
-  
+
   # Verify imports
   imports = generator.get_required_imports()
   assert "androidx.compose.ui.graphics.vector.ImageVector" in imports
@@ -78,27 +78,27 @@ def test_end_to_end_integration():
   # This test demonstrates the complete workflow
   parser = PathParser()
   path_data = parser.parse_path_data("M 0 0 L 24 0 L 24 24 L 0 24 Z")
-  
+
   red_color = IrColor.from_hex("#FF0000")
   path = IrVectorPath(paths=path_data, fill=red_color)
-  
+
   image_vector = IrImageVector(
     name="SquareIcon",
     default_width=24.0,
     default_height=24.0,
     viewport_width=24.0,
     viewport_height=24.0,
-    nodes=[path]
+    nodes=[path],
   )
-  
+
   generator = ImageVectorGenerator()
   kotlin_code = generator.generate(image_vector)
-  
+
   # The generated code should be valid Kotlin that compiles
   assert kotlin_code.count("ImageVector.Builder(") == 1
   assert kotlin_code.count(".build()") == 1
   assert kotlin_code.count("path(") == 1
-  
+
   print("\n=== Integration Test Output ===")
   print("Generated Kotlin code:")
   print(kotlin_code)

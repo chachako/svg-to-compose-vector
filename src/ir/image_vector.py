@@ -7,6 +7,7 @@ from .color import IrColor
 @dataclass
 class IrImageVector:
   """Root container for ImageVector data."""
+
   name: str
   default_width: float
   default_height: float
@@ -15,7 +16,7 @@ class IrImageVector:
   nodes: List[IrVectorNode]
   auto_mirror: bool = False
   tint_color: Optional[IrColor] = None
-  
+
   def __post_init__(self):
     if self.viewport_width <= 0 or self.viewport_height <= 0:
       raise ValueError("Viewport dimensions must be positive")

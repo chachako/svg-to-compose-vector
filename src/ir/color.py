@@ -6,19 +6,20 @@ import re
 @dataclass(frozen=True)
 class IrColor:
   """Immutable color representation using ARGB format."""
+
   argb: int
 
   @classmethod
   def from_hex(cls, hex_string: str) -> "IrColor":
     """Parse color from hex string (#RGB, #RRGGBB, #RRGGBBAA)."""
-    hex_string = hex_string.strip().lstrip('#')
-    
+    hex_string = hex_string.strip().lstrip("#")
+
     if len(hex_string) == 3:
       # Expand short form: #RGB -> #RRGGBB (each digit doubled)
       r, g, b = hex_string
       hex_string = f"{r}{r}{g}{g}{b}{b}"
     elif len(hex_string) == 4:
-      # Expand short form with alpha: #ARGB -> #AARRGGBB  
+      # Expand short form with alpha: #ARGB -> #AARRGGBB
       r, g, b, a = hex_string
       hex_string = f"{a}{a}{r}{r}{g}{g}{b}{b}"
     elif len(hex_string) == 6:
@@ -29,7 +30,7 @@ class IrColor:
       hex_string = f"{hex_string[6:8]}{hex_string[0:6]}"
     else:
       raise ValueError(f"Invalid hex color format: #{hex_string}")
-    
+
     argb = int(hex_string, 16)
     return cls(argb)
 
@@ -38,7 +39,7 @@ class IrColor:
     """Create color from RGB(A) components (0-255)."""
     if not all(0 <= c <= 255 for c in [red, green, blue, alpha]):
       raise ValueError("Color components must be in range 0-255")
-    
+
     # Pack components into ARGB format using bit shifting
     argb = (alpha << 24) | (red << 16) | (green << 8) | blue
     return cls(argb)
@@ -94,27 +95,75 @@ NAMED_COLORS = {
 def parse_color(color_string: str) -> Union[IrColor, None]:
   """Parse color from various string formats."""
   color_string = color_string.strip().lower()
-  
+
   # SVG "none" means no fill/stroke should be applied
   if color_string == "none" or color_string == "transparent":
     return None
-  
+
   if color_string in NAMED_COLORS:
     return NAMED_COLORS[color_string]
-  
-  if color_string.startswith('#'):
+
+  if color_string.startswith("#"):
     return IrColor.from_hex(color_string)
-  
-  rgb_match = re.match(r'rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', color_string)
+
+  rgb_match = re.match(r"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)", color_string)
   if rgb_match:
     r, g, b = map(int, rgb_match.groups())
     return IrColor.from_rgb(r, g, b)
-  
-  rgba_match = re.match(r'rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)', color_string)
+
+  rgba_match = re.match(r"rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)", color_string)
   if rgba_match:
     r, g, b = map(int, rgba_match.groups()[:3])
     # Convert float alpha (0.0-1.0) to int (0-255)
     a = int(float(rgba_match.groups()[3]) * 255)
     return IrColor.from_rgb(r, g, b, a)
-  
+
+  hsl_match = re.match(r"hsl\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)", color_string)
+  if hsl_match:
+    hue, saturation, lightness = map(float, hsl_match.groups())
+    r, g, b = _hsl_to_rgb(hue / 360.0, saturation / 100.0, lightness / 100.0)
+    return IrColor.from_rgb(r, g, b)
+
+  hsla_match = re.match(
+    r"hsla\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*,\s*([\d.]+)\s*\)", color_string
+  )
+  if hsla_match:
+    hue, saturation, lightness, alpha_val = map(float, hsla_match.groups())
+    r, g, b = _hsl_to_rgb(hue / 360.0, saturation / 100.0, lightness / 100.0)
+    alpha = int(alpha_val * 255)
+    return IrColor.from_rgb(r, g, b, alpha)
+
   raise ValueError(f"Unsupported color format: {color_string}")
+
+
+def _hsl_to_rgb(hue: float, saturation: float, lightness: float) -> tuple[int, int, int]:
+  """Convert HSL to RGB color values."""
+
+  def _hue_to_rgb(p: float, q: float, t: float) -> float:
+    if t < 0:
+      t += 1
+    if t > 1:
+      t -= 1
+    if t < 1 / 6:
+      return p + (q - p) * 6 * t
+    if t < 1 / 2:
+      return q
+    if t < 2 / 3:
+      return p + (q - p) * (2 / 3 - t) * 6
+    return p
+
+  if saturation == 0:
+    # Achromatic (gray)
+    r = g = b = lightness
+  else:
+    q = (
+      lightness * (1 + saturation)
+      if lightness < 0.5
+      else lightness + saturation - lightness * saturation
+    )
+    p = 2 * lightness - q
+    r = _hue_to_rgb(p, q, hue + 1 / 3)
+    g = _hue_to_rgb(p, q, hue)
+    b = _hue_to_rgb(p, q, hue - 1 / 3)
+
+  return int(r * 255), int(g * 255), int(b * 255)

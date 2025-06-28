@@ -8,12 +8,14 @@ from .color import IrColor
 @dataclass
 class IrVectorNode(ABC):
   """Base class for all vector nodes (paths and groups)."""
+
   name: Optional[str] = field(default=None, kw_only=True)
 
 
 @dataclass
 class IrVectorPath(IrVectorNode):
   """Represents a path element with styling and path data."""
+
   paths: List[IrPathNode]
   fill: Optional[IrColor] = field(default=None, kw_only=True)
   stroke: Optional[IrColor] = field(default=None, kw_only=True)
@@ -32,6 +34,7 @@ class IrVectorPath(IrVectorNode):
 @dataclass
 class IrVectorGroup(IrVectorNode):
   """Represents a group element with transformation and child nodes."""
+
   children: List[IrVectorNode]
   rotation: float = field(default=0.0, kw_only=True)
   pivot_x: float = field(default=0.0, kw_only=True)
