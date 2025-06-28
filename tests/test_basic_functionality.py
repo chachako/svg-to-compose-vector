@@ -40,7 +40,7 @@ def test_image_vector_generator():
   
   # Create IR structures
   red_color = IrColor.from_hex("#FF0000")
-  path = IrVectorPath(path_data=path_data, fill=red_color)
+  path = IrVectorPath(paths=path_data, fill=red_color)
   
   image_vector = IrImageVector(
     name="TestIcon",
@@ -80,7 +80,7 @@ def test_end_to_end_integration():
   path_data = parser.parse_path_data("M 0 0 L 24 0 L 24 24 L 0 24 Z")
   
   red_color = IrColor.from_hex("#FF0000")
-  path = IrVectorPath(path_data=path_data, fill=red_color)
+  path = IrVectorPath(paths=path_data, fill=red_color)
   
   image_vector = IrImageVector(
     name="SquareIcon",

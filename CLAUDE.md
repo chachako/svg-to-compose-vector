@@ -67,3 +67,16 @@ Comments should prioritize explaining the **"why"** over the "what." However, fo
 - **Plan First**: For complex tasks, propose a step-by-step plan before coding.
 - **Test Everything**: Cover new functionality with `pytest` tests.
 - **Atomic Commits**: Keep commits small and focused. If a solution becomes messy, reset and re-implement cleanly.
+
+## 6. Testing Best Practices
+
+- **Test Files**: Place all tests in the `tests/` directory with names `test_*.py`
+- **Test Functions**: Prefix test functions with `test_` (e.g., `def test_svg_parser():`)
+- **Test Classes**: Use `TestClassName` for grouping related tests
+- **Assertions**: Use Python's built-in `assert` statement, not custom assertion libraries
+- **Test Data**: Use standard examples when possible:
+  - W3C SVG Test Suite: https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/
+  - W3Schools SVG Examples: https://www.w3schools.com/graphics/svg_examples.asp
+  - MDN SVG Basic Shapes: https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Basic_Shapes
+- **Run Tests**: Use `uv run pytest` to run all tests, or `uv run pytest tests/test_specific.py` for specific files
+- **Test Dependencies**: pytest is included in the test dependency group, managed by uv

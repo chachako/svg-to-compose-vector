@@ -14,7 +14,7 @@ class IrVectorNode(ABC):
 @dataclass
 class IrVectorPath(IrVectorNode):
   """Represents a path element with styling and path data."""
-  path_data: List[IrPathNode]
+  paths: List[IrPathNode]
   fill: Optional[IrColor] = field(default=None, kw_only=True)
   stroke: Optional[IrColor] = field(default=None, kw_only=True)
   fill_alpha: float = field(default=1.0, kw_only=True)

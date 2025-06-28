@@ -109,7 +109,7 @@ class ImageVectorGenerator:
     else:
       lines.append(f"{indent}path {{")
     
-    path_data_lines = path_data_to_dsl(path.path_data)
+    path_data_lines = path_data_to_dsl(path.paths)
     if path_data_lines:
       for line in path_data_lines.split('\n'):
         lines.append(f"{indent}{line}")
