@@ -72,19 +72,12 @@ class IrColor:
 
   def to_compose_color(self) -> str:
     """Generate Compose Color constructor call."""
-    if self.alpha == 255:
-      # Use hex notation for fully opaque colors as it's more compact
-      return f"Color(0x{self.argb:08X})"
-    else:
-      # Use RGBA constructor for transparency to be more explicit
-      return f"Color({self.red}, {self.green}, {self.blue}, {self.alpha})"
-
-  def to_hex_string(self) -> str:
-    """Convert to hex string format #RRGGBBAA."""
-    return f"#{self.red:02X}{self.green:02X}{self.blue:02X}{self.alpha:02X}"
+    # Always use hex notation with ARGB format: Color(0xAARRGGBB)
+    # This is the standard Compose format and handles both opaque and transparent colors
+    return f"Color(0x{self.argb:08X})"
 
   def __str__(self) -> str:
-    return self.to_hex_string()
+    return self.to_compose_color()
 
 
 # Named colors from CSS3 specification
