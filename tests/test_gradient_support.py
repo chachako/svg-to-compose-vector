@@ -1,4 +1,3 @@
-import pytest
 from src.parser.svg_parser import SvgParser
 from src.parser.gradient_parser import GradientParser
 from src.generator.image_vector_generator import ImageVectorGenerator

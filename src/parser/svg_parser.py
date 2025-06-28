@@ -4,7 +4,7 @@ from pathlib import Path
 from ..ir.image_vector import IrImageVector
 from ..ir.vector_node import IrVectorNode, IrVectorPath, IrVectorGroup
 from ..ir.color import IrColor
-from ..ir.gradient import IrFill, IrColorFill, IrLinearGradient, IrRadialGradient
+from ..ir.gradient import IrFill, IrColorFill
 from .path_parser import PathParser
 from .transform_parser import TransformParser
 from .gradient_parser import GradientParser
