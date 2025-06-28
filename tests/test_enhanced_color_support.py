@@ -111,7 +111,7 @@ class TestSmartColorNaming:
     
     # Transparent named color
     transparent_red = IrColor.from_rgb(255, 0, 0, 128)
-    expected = "SolidColor(Color.Red.copy(alpha = 0.501961f))"
+    expected = "SolidColor(Color.Red.copy(alpha = 0.502f))"
     assert transparent_red.to_compose_solid_color() == expected
     
     # Custom color (no name)
@@ -159,7 +159,7 @@ class TestSvgIntegrationWithColors:
     # Check for smart color naming in output with Compose built-ins
     assert "fill = SolidColor(Color.Red)" in code
     assert "stroke = SolidColor(Color.Blue)" in code
-    assert "strokeLineWidth = 3.0f" in code
+    assert "strokeLineWidth = 3f" in code
 
   def test_transparent_colors_in_svg(self):
     """Test transparent color handling in SVG."""

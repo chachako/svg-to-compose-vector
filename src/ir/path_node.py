@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List
+from ..utils.formatting import format_float
 
 
 @dataclass(frozen=True)
@@ -29,7 +30,7 @@ class IrMoveTo(IrPathNode):
   y: float
 
   def to_compose_dsl(self) -> str:
-    return f"moveTo({self.x}f, {self.y}f)"
+    return f"moveTo({format_float(self.x)}, {format_float(self.y)})"
 
 
 @dataclass(frozen=True)
@@ -40,7 +41,7 @@ class IrLineTo(IrPathNode):
   y: float
 
   def to_compose_dsl(self) -> str:
-    return f"lineTo({self.x}f, {self.y}f)"
+    return f"lineTo({format_float(self.x)}, {format_float(self.y)})"
 
 
 @dataclass(frozen=True)
@@ -50,7 +51,7 @@ class IrHorizontalTo(IrPathNode):
   x: float
 
   def to_compose_dsl(self) -> str:
-    return f"horizontalLineTo({self.x}f)"
+    return f"horizontalLineTo({format_float(self.x)})"
 
 
 @dataclass(frozen=True)
@@ -60,7 +61,7 @@ class IrVerticalTo(IrPathNode):
   y: float
 
   def to_compose_dsl(self) -> str:
-    return f"verticalLineTo({self.y}f)"
+    return f"verticalLineTo({format_float(self.y)})"
 
 
 @dataclass(frozen=True)
@@ -75,7 +76,7 @@ class IrCurveTo(IrPathNode):
   y3: float
 
   def to_compose_dsl(self) -> str:
-    return f"curveTo({self.x1}f, {self.y1}f, {self.x2}f, {self.y2}f, {self.x3}f, {self.y3}f)"
+    return f"curveTo({format_float(self.x1)}, {format_float(self.y1)}, {format_float(self.x2)}, {format_float(self.y2)}, {format_float(self.x3)}, {format_float(self.y3)})"
 
 
 @dataclass(frozen=True)
@@ -88,7 +89,7 @@ class IrQuadTo(IrPathNode):
   y2: float
 
   def to_compose_dsl(self) -> str:
-    return f"quadTo({self.x1}f, {self.y1}f, {self.x2}f, {self.y2}f)"
+    return f"quadTo({format_float(self.x1)}, {format_float(self.y1)}, {format_float(self.x2)}, {format_float(self.y2)})"
 
 
 @dataclass(frozen=True)
@@ -101,7 +102,7 @@ class IrReflectiveCurveTo(IrPathNode):
   y3: float
 
   def to_compose_dsl(self) -> str:
-    return f"reflectiveCurveTo({self.x2}f, {self.y2}f, {self.x3}f, {self.y3}f)"
+    return f"reflectiveCurveTo({format_float(self.x2)}, {format_float(self.y2)}, {format_float(self.x3)}, {format_float(self.y3)})"
 
 
 @dataclass(frozen=True)
@@ -112,7 +113,7 @@ class IrReflectiveQuadTo(IrPathNode):
   y: float
 
   def to_compose_dsl(self) -> str:
-    return f"reflectiveQuadTo({self.x}f, {self.y}f)"
+    return f"reflectiveQuadTo({format_float(self.x)}, {format_float(self.y)})"
 
 
 @dataclass(frozen=True)
@@ -129,9 +130,9 @@ class IrArcTo(IrPathNode):
 
   def to_compose_dsl(self) -> str:
     return (
-      f"arcTo({self.horizontal_ellipse_radius}f, {self.vertical_ellipse_radius}f, "
-      f"{self.theta}f, {str(self.is_more_than_half).lower()}, "
-      f"{str(self.is_positive_arc).lower()}, {self.x1}f, {self.y1}f)"
+      f"arcTo({format_float(self.horizontal_ellipse_radius)}, {format_float(self.vertical_ellipse_radius)}, "
+      f"{format_float(self.theta)}, {str(self.is_more_than_half).lower()}, "
+      f"{str(self.is_positive_arc).lower()}, {format_float(self.x1)}, {format_float(self.y1)})"
     )
 
 
@@ -143,7 +144,7 @@ class IrRelativeMoveTo(IrPathNode):
   dy: float
 
   def to_compose_dsl(self) -> str:
-    return f"moveToRelative({self.dx}f, {self.dy}f)"
+    return f"moveToRelative({format_float(self.dx)}, {format_float(self.dy)})"
 
 
 @dataclass(frozen=True)
@@ -154,7 +155,7 @@ class IrRelativeLineTo(IrPathNode):
   dy: float
 
   def to_compose_dsl(self) -> str:
-    return f"lineToRelative({self.dx}f, {self.dy}f)"
+    return f"lineToRelative({format_float(self.dx)}, {format_float(self.dy)})"
 
 
 @dataclass(frozen=True)
@@ -164,7 +165,7 @@ class IrRelativeHorizontalTo(IrPathNode):
   dx: float
 
   def to_compose_dsl(self) -> str:
-    return f"horizontalLineToRelative({self.dx}f)"
+    return f"horizontalLineToRelative({format_float(self.dx)})"
 
 
 @dataclass(frozen=True)
@@ -174,7 +175,7 @@ class IrRelativeVerticalTo(IrPathNode):
   dy: float
 
   def to_compose_dsl(self) -> str:
-    return f"verticalLineToRelative({self.dy}f)"
+    return f"verticalLineToRelative({format_float(self.dy)})"
 
 
 @dataclass(frozen=True)
@@ -190,8 +191,8 @@ class IrRelativeCurveTo(IrPathNode):
 
   def to_compose_dsl(self) -> str:
     return (
-      f"curveToRelative({self.dx1}f, {self.dy1}f, {self.dx2}f, {self.dy2}f, "
-      f"{self.dx3}f, {self.dy3}f)"
+      f"curveToRelative({format_float(self.dx1)}, {format_float(self.dy1)}, {format_float(self.dx2)}, {format_float(self.dy2)}, "
+      f"{format_float(self.dx3)}, {format_float(self.dy3)})"
     )
 
 
@@ -205,7 +206,7 @@ class IrRelativeQuadTo(IrPathNode):
   dy2: float
 
   def to_compose_dsl(self) -> str:
-    return f"quadToRelative({self.dx1}f, {self.dy1}f, {self.dx2}f, {self.dy2}f)"
+    return f"quadToRelative({format_float(self.dx1)}, {format_float(self.dy1)}, {format_float(self.dx2)}, {format_float(self.dy2)})"
 
 
 @dataclass(frozen=True)
@@ -218,7 +219,7 @@ class IrRelativeReflectiveCurveTo(IrPathNode):
   dy3: float
 
   def to_compose_dsl(self) -> str:
-    return f"reflectiveCurveToRelative({self.dx2}f, {self.dy2}f, {self.dx3}f, {self.dy3}f)"
+    return f"reflectiveCurveToRelative({format_float(self.dx2)}, {format_float(self.dy2)}, {format_float(self.dx3)}, {format_float(self.dy3)})"
 
 
 @dataclass(frozen=True)
@@ -229,7 +230,7 @@ class IrRelativeReflectiveQuadTo(IrPathNode):
   dy: float
 
   def to_compose_dsl(self) -> str:
-    return f"reflectiveQuadToRelative({self.dx}f, {self.dy}f)"
+    return f"reflectiveQuadToRelative({format_float(self.dx)}, {format_float(self.dy)})"
 
 
 @dataclass(frozen=True)
@@ -246,9 +247,9 @@ class IrRelativeArcTo(IrPathNode):
 
   def to_compose_dsl(self) -> str:
     return (
-      f"arcToRelative({self.horizontal_ellipse_radius}f, {self.vertical_ellipse_radius}f, "
-      f"{self.theta}f, {str(self.is_more_than_half).lower()}, "
-      f"{str(self.is_positive_arc).lower()}, {self.dx1}f, {self.dy1}f)"
+      f"arcToRelative({format_float(self.horizontal_ellipse_radius)}, {format_float(self.vertical_ellipse_radius)}, "
+      f"{format_float(self.theta)}, {str(self.is_more_than_half).lower()}, "
+      f"{str(self.is_positive_arc).lower()}, {format_float(self.dx1)}, {format_float(self.dy1)})"
     )
 
 

@@ -285,10 +285,10 @@ class TestGroupCodeGeneration:
     
     # Check that group code is generated
     assert "group(" in code
-    assert "translationX = 10.0f," in code
-    assert "translationY = 20.0f," in code
-    assert "scaleX = 2.0f," in code
-    assert "rotate = 45.0f," in code
+    assert "translationX = 10f," in code
+    assert "translationY = 20f," in code
+    assert "scaleX = 2f," in code
+    assert "rotate = 45f," in code
 
   def test_simple_group_code_generation(self):
     """Test code generation for group without transforms."""
@@ -323,8 +323,8 @@ class TestGroupCodeGeneration:
     # Check that simple group code is generated
     assert "group {" in code
     assert "group(" not in code  # No parameters
-    assert "moveTo(0.0f, 0.0f)" in code
-    assert "moveTo(5.0f, 5.0f)" in code
+    assert "moveTo(0f, 0f)" in code
+    assert "moveTo(5f, 5f)" in code
 
 
 class TestEndToEndGroupsAndTransforms:

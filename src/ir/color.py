@@ -79,6 +79,8 @@ class IrColor:
 
   def to_compose_solid_color(self, use_named_colors: bool = True) -> str:
     """Generate Compose SolidColor constructor call for use as Brush."""
+    from ..utils.formatting import format_alpha
+    
     # For use as fill/stroke in path()
     if use_named_colors:
       named = self.to_compose_color_name()
@@ -88,7 +90,7 @@ class IrColor:
       elif named and self.alpha < 255:
         # Use named color with alpha like Color.Red.copy(alpha = 0.5f)
         alpha_value = self.alpha / 255.0
-        return f"SolidColor(Color.{named}.copy(alpha = {alpha_value:.6f}f))"
+        return f"SolidColor(Color.{named}.copy(alpha = {format_alpha(alpha_value)}))"
     
     # Fallback to hex notation
     return f"SolidColor({self.to_compose_color()})"

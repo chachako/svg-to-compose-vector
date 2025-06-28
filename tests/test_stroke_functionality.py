@@ -87,7 +87,7 @@ class TestStrokeFunctionality:
 
     # Check that stroke attributes are included in generated code
     assert "stroke = SolidColor(Color.Green)" in code
-    assert "strokeLineWidth = 3.0f" in code
+    assert "strokeLineWidth = 3f" in code
     assert "strokeAlpha = 0.7f" in code
     assert "strokeLineCap = StrokeCap.Round" in code
     assert "strokeLineJoin = StrokeJoin.Round" in code
@@ -114,7 +114,7 @@ class TestStrokeFunctionality:
     # Both stroke and fill should be present
     assert "fill = SolidColor(Color.Blue)" in code  # Blue
     assert "stroke = SolidColor(Color.Red)" in code  # Red
-    assert "strokeLineWidth = 1.0f" in code
+    assert "strokeLineWidth = 1f" in code
 
   def test_no_stroke_when_not_specified(self):
     """Test that stroke is not generated when not specified."""
@@ -177,7 +177,7 @@ def test_stroke_integration_example():
     "stroke = SolidColor(Color(0xFF2196F3))",
     "fillAlpha = 0.6f",
     "strokeAlpha = 0.8f",
-    "strokeLineWidth = 4.0f",
+    "strokeLineWidth = 4f",
     "strokeLineCap = StrokeCap.Round",
     "strokeLineJoin = StrokeJoin.Round",
   ]

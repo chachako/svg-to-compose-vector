@@ -193,7 +193,7 @@ def test_svg_parser_integration():
   # Verify generated code contains expected elements
   assert "ImageVector.Builder(" in kotlin_code
   assert 'name = "star"' in kotlin_code
-  assert "viewportWidth = 24.0f" in kotlin_code
+  assert "viewportWidth = 24f" in kotlin_code
   assert "path(" in kotlin_code
   assert "fill = SolidColor(Color(0xFFFFCC00))" in kotlin_code  # Gold color
   assert ".build()" in kotlin_code

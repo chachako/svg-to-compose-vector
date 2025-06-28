@@ -27,7 +27,7 @@ class TestExtendedPathCommands:
     assert nodes[0].y1 == 15.0
     assert nodes[0].x2 == 20.0
     assert nodes[0].y2 == 25.0
-    assert nodes[0].to_compose_dsl() == "quadTo(10.0f, 15.0f, 20.0f, 25.0f)"
+    assert nodes[0].to_compose_dsl() == "quadTo(10f, 15f, 20f, 25f)"
 
   def test_quadratic_bezier_relative(self):
     """Test q command (relative quadratic Bezier curve)."""
@@ -39,7 +39,7 @@ class TestExtendedPathCommands:
     assert nodes[0].dy1 == 10.0
     assert nodes[0].dx2 == 15.0
     assert nodes[0].dy2 == 20.0
-    assert nodes[0].to_compose_dsl() == "quadToRelative(5.0f, 10.0f, 15.0f, 20.0f)"
+    assert nodes[0].to_compose_dsl() == "quadToRelative(5f, 10f, 15f, 20f)"
 
   def test_smooth_cubic_bezier_absolute(self):
     """Test S command (absolute smooth cubic Bezier curve)."""
@@ -51,7 +51,7 @@ class TestExtendedPathCommands:
     assert nodes[0].y2 == 15.0
     assert nodes[0].x3 == 20.0
     assert nodes[0].y3 == 25.0
-    assert nodes[0].to_compose_dsl() == "reflectiveCurveTo(10.0f, 15.0f, 20.0f, 25.0f)"
+    assert nodes[0].to_compose_dsl() == "reflectiveCurveTo(10f, 15f, 20f, 25f)"
 
   def test_smooth_cubic_bezier_relative(self):
     """Test s command (relative smooth cubic Bezier curve)."""
@@ -63,7 +63,7 @@ class TestExtendedPathCommands:
     assert nodes[0].dy2 == 10.0
     assert nodes[0].dx3 == 15.0
     assert nodes[0].dy3 == 20.0
-    assert nodes[0].to_compose_dsl() == "reflectiveCurveToRelative(5.0f, 10.0f, 15.0f, 20.0f)"
+    assert nodes[0].to_compose_dsl() == "reflectiveCurveToRelative(5f, 10f, 15f, 20f)"
 
   def test_smooth_quadratic_bezier_absolute(self):
     """Test T command (absolute smooth quadratic Bezier curve)."""
@@ -73,7 +73,7 @@ class TestExtendedPathCommands:
     assert isinstance(nodes[0], IrReflectiveQuadTo)
     assert nodes[0].x == 20.0
     assert nodes[0].y == 25.0
-    assert nodes[0].to_compose_dsl() == "reflectiveQuadTo(20.0f, 25.0f)"
+    assert nodes[0].to_compose_dsl() == "reflectiveQuadTo(20f, 25f)"
 
   def test_smooth_quadratic_bezier_relative(self):
     """Test t command (relative smooth quadratic Bezier curve)."""
@@ -83,7 +83,7 @@ class TestExtendedPathCommands:
     assert isinstance(nodes[0], IrRelativeReflectiveQuadTo)
     assert nodes[0].dx == 15.0
     assert nodes[0].dy == 20.0
-    assert nodes[0].to_compose_dsl() == "reflectiveQuadToRelative(15.0f, 20.0f)"
+    assert nodes[0].to_compose_dsl() == "reflectiveQuadToRelative(15f, 20f)"
 
   def test_arc_absolute(self):
     """Test A command (absolute elliptical arc)."""
@@ -98,7 +98,7 @@ class TestExtendedPathCommands:
     assert nodes[0].is_positive_arc
     assert nodes[0].x1 == 100.0
     assert nodes[0].y1 == 200.0
-    expected_dsl = "arcTo(25.0f, 50.0f, -30.0f, false, true, 100.0f, 200.0f)"
+    expected_dsl = "arcTo(25f, 50f, -30f, false, true, 100f, 200f)"
     assert nodes[0].to_compose_dsl() == expected_dsl
 
   def test_arc_relative(self):
@@ -114,7 +114,7 @@ class TestExtendedPathCommands:
     assert not nodes[0].is_positive_arc
     assert nodes[0].dx1 == 50.0
     assert nodes[0].dy1 == 75.0
-    expected_dsl = "arcToRelative(10.0f, 20.0f, 45.0f, true, false, 50.0f, 75.0f)"
+    expected_dsl = "arcToRelative(10f, 20f, 45f, true, false, 50f, 75f)"
     assert nodes[0].to_compose_dsl() == expected_dsl
 
   def test_multiple_commands_sequence(self):
@@ -182,8 +182,8 @@ def test_end_to_end_advanced_path():
   kotlin_code = generator.generate(ir)
 
   # Verify the generated code contains the expected DSL calls
-  assert "quadTo(50.0f, 10.0f, 80.0f, 20.0f)" in kotlin_code
-  assert "reflectiveQuadTo(80.0f, 50.0f)" in kotlin_code
-  assert "reflectiveCurveTo(70.0f, 80.0f, 50.0f, 80.0f)" in kotlin_code
-  assert "arcTo(10.0f, 10.0f, 0.0f, false, true, 20.0f, 70.0f)" in kotlin_code
+  assert "quadTo(50f, 10f, 80f, 20f)" in kotlin_code
+  assert "reflectiveQuadTo(80f, 50f)" in kotlin_code
+  assert "reflectiveCurveTo(70f, 80f, 50f, 80f)" in kotlin_code
+  assert "arcTo(10f, 10f, 0f, false, true, 20f, 70f)" in kotlin_code
   assert "close()" in kotlin_code

@@ -2,6 +2,7 @@ from typing import List, Set
 from ..ir.image_vector import IrImageVector
 from ..ir.vector_node import IrVectorNode, IrVectorPath, IrVectorGroup
 from ..ir.path_node import path_data_to_dsl
+from ..utils.formatting import format_float, format_dp
 
 
 class ImageVectorGenerator:
@@ -23,10 +24,10 @@ class ImageVectorGenerator:
 
     lines.append("ImageVector.Builder(")
     lines.append(f'  name = "{ir.name}",')
-    lines.append(f"  defaultWidth = {ir.default_width}.dp,")
-    lines.append(f"  defaultHeight = {ir.default_height}.dp,")
-    lines.append(f"  viewportWidth = {ir.viewport_width}f,")
-    lines.append(f"  viewportHeight = {ir.viewport_height}f,")
+    lines.append(f"  defaultWidth = {format_dp(ir.default_width)}.dp,")
+    lines.append(f"  defaultHeight = {format_dp(ir.default_height)}.dp,")
+    lines.append(f"  viewportWidth = {format_float(ir.viewport_width)},")
+    lines.append(f"  viewportHeight = {format_float(ir.viewport_height)},")
 
     if ir.auto_mirror:
       lines.append("  autoMirror = true,")
@@ -84,13 +85,13 @@ class ImageVectorGenerator:
         lines.append(f"{indent}  stroke = {path.stroke.to_compose_solid_color()},")
 
       if path.fill_alpha != 1.0:
-        lines.append(f"{indent}  fillAlpha = {path.fill_alpha}f,")
+        lines.append(f"{indent}  fillAlpha = {format_float(path.fill_alpha)},")
 
       if path.stroke_alpha != 1.0:
-        lines.append(f"{indent}  strokeAlpha = {path.stroke_alpha}f,")
+        lines.append(f"{indent}  strokeAlpha = {format_float(path.stroke_alpha)},")
 
       if path.stroke_line_width != 0.0:
-        lines.append(f"{indent}  strokeLineWidth = {path.stroke_line_width}f,")
+        lines.append(f"{indent}  strokeLineWidth = {format_float(path.stroke_line_width)},")
 
       if path.stroke_line_cap != "butt":
         cap_value = self._get_stroke_cap_value(path.stroke_line_cap)
@@ -101,7 +102,7 @@ class ImageVectorGenerator:
         lines.append(f"{indent}  strokeLineJoin = {join_value},")
 
       if path.stroke_line_miter != 4.0:
-        lines.append(f"{indent}  strokeLineMiter = {path.stroke_line_miter}f,")
+        lines.append(f"{indent}  strokeLineMiter = {format_float(path.stroke_line_miter)},")
 
       if path.path_fill_type != "nonZero":
         fill_type_value = self._get_path_fill_type_value(path.path_fill_type)
@@ -146,25 +147,25 @@ class ImageVectorGenerator:
         lines.append(f'{indent}  name = "{group.name}",')
 
       if group.rotation != 0.0:
-        lines.append(f"{indent}  rotate = {group.rotation}f,")
+        lines.append(f"{indent}  rotate = {format_float(group.rotation)},")
 
       if group.pivot_x != 0.0:
-        lines.append(f"{indent}  pivotX = {group.pivot_x}f,")
+        lines.append(f"{indent}  pivotX = {format_float(group.pivot_x)},")
 
       if group.pivot_y != 0.0:
-        lines.append(f"{indent}  pivotY = {group.pivot_y}f,")
+        lines.append(f"{indent}  pivotY = {format_float(group.pivot_y)},")
 
       if group.scale_x != 1.0:
-        lines.append(f"{indent}  scaleX = {group.scale_x}f,")
+        lines.append(f"{indent}  scaleX = {format_float(group.scale_x)},")
 
       if group.scale_y != 1.0:
-        lines.append(f"{indent}  scaleY = {group.scale_y}f,")
+        lines.append(f"{indent}  scaleY = {format_float(group.scale_y)},")
 
       if group.translation_x != 0.0:
-        lines.append(f"{indent}  translationX = {group.translation_x}f,")
+        lines.append(f"{indent}  translationX = {format_float(group.translation_x)},")
 
       if group.translation_y != 0.0:
-        lines.append(f"{indent}  translationY = {group.translation_y}f,")
+        lines.append(f"{indent}  translationY = {format_float(group.translation_y)},")
 
       lines.append(f"{indent}) {{")
     else:

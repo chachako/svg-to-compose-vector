@@ -164,6 +164,6 @@ def test_style_attribute_integration():
   code = generator.generate(ir)
 
   # Should include both RGB and HSL color conversions with smart naming
-  assert "fill = SolidColor(Color.Red.copy(alpha = 0.800000f))" in code  # RGBA(255,0,0,0.8)
+  assert "fill = SolidColor(Color.Red.copy(alpha = 0.8f))" in code  # RGBA(255,0,0,0.8)
   assert "stroke = SolidColor(Color.Blue)" in code  # HSL blue
-  assert "strokeLineWidth = 2.0f" in code
+  assert "strokeLineWidth = 2f" in code
