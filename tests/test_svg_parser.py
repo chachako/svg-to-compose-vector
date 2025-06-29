@@ -1,9 +1,10 @@
 """Tests for SVG document parser using standard SVG examples."""
 
 import pytest
-from src.parser.svg_parser import SvgParser
+
 from src.ir.image_vector import IrImageVector
 from src.ir.vector_node import IrVectorPath
+from src.parser.svg_parser import SvgParser
 
 
 class TestSvgParser:
@@ -102,6 +103,7 @@ class TestSvgParser:
     # Should have 1 group with 2 paths inside (since group has ID, it's preserved)
     assert len(ir.nodes) == 1
     from src.ir.vector_node import IrVectorGroup
+
     assert isinstance(ir.nodes[0], IrVectorGroup)
     group = ir.nodes[0]
     assert group.name == "shapes"

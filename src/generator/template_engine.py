@@ -1,9 +1,9 @@
-from typing import Optional, Set
-from pathlib import Path
 import re
+from pathlib import Path
 
 try:
   from jinja2 import Environment, FileSystemLoader
+
   HAS_JINJA2 = True
 except ImportError:
   HAS_JINJA2 = False
@@ -17,7 +17,7 @@ class TemplateEngine:
 
   def __init__(self, config: Config):
     self.config = config
-    self._env: Optional[Environment] = None
+    self._env: Environment | None = None
     self._setup_environment()
 
   def _setup_environment(self):
@@ -41,22 +41,22 @@ class TemplateEngine:
     self,
     template_name: str,
     build_code: str,
-    imports: Set[str],
-    name_components: Optional[NameComponents] = None,
-    icon_name: Optional[str] = None,
-    **template_vars
+    imports: set[str],
+    name_components: NameComponents | None = None,
+    icon_name: str | None = None,
+    **template_vars,
   ) -> str:
     """Render template with provided variables."""
-    
+
     # Handle backward compatibility: create NameComponents from icon_name if needed
     if name_components is None:
       if icon_name is None:
         raise ValueError("Either name_components or icon_name must be provided")
-      
+
       # Use NameResolver to properly parse the icon_name
       name_resolver = NameResolver()
       name_components = name_resolver.resolve_name_from_string(icon_name)
-    
+
     # Fallback to simple string interpolation if Jinja2 not available
     if not HAS_JINJA2 or not self._env:
       return self._simple_render(build_code, imports, **template_vars)
@@ -87,21 +87,19 @@ class TemplateEngine:
 
     return template.render(**variables)
 
-  def _simple_render(
-    self, build_code: str, imports: Set[str], **template_vars
-  ) -> str:
+  def _simple_render(self, build_code: str, imports: set[str], **template_vars) -> str:
     """Simple fallback rendering without Jinja2."""
     formatted_imports = self._format_imports(imports)
-    
+
     return f"{formatted_imports}\n\n{build_code}"
 
-  def _format_imports(self, imports: Set[str]) -> str:
+  def _format_imports(self, imports: set[str]) -> str:
     """Format imports according to configuration."""
     if not imports:
       return ""
 
     sorted_imports = sorted(imports)
-    
+
     if self.config.group_imports:
       # Group by package
       groups = {}
@@ -114,17 +112,17 @@ class TemplateEngine:
         if group not in groups:
           groups[group] = []
         groups[group].append(imp)
-      
+
       lines = []
       for group_name in sorted(groups.keys()):
         for imp in sorted(groups[group_name]):
           lines.append(f"import {imp}")
         lines.append("")  # Empty line between groups
-      
+
       # Remove trailing empty line
       if lines and lines[-1] == "":
         lines.pop()
-      
+
       return "\n".join(lines)
     else:
       # Simple sorted list without grouping
@@ -154,9 +152,9 @@ class TemplateEngine:
     templates_dir = Path(__file__).parent / "templates"
     if not templates_dir.exists():
       return []
-    
+
     templates = []
     for template_file in templates_dir.glob("*.j2"):
       templates.append(template_file.stem)
-    
+
     return sorted(templates)

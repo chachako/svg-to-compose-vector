@@ -1,11 +1,11 @@
 """Basic functionality tests for SVG to Compose converter."""
 
-from src.ir.color import IrColor
-from src.ir.path_node import IrMoveTo, IrLineTo, IrClose
-from src.ir.vector_node import IrVectorPath
-from src.ir.image_vector import IrImageVector
-from src.parser.path_parser import PathParser
 from src.generator.image_vector_generator import ImageVectorGenerator
+from src.ir.color import IrColor
+from src.ir.image_vector import IrImageVector
+from src.ir.path_node import IrClose, IrLineTo, IrMoveTo
+from src.ir.vector_node import IrVectorPath
+from src.parser.path_parser import PathParser
 
 
 def test_ir_color_parsing():

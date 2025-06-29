@@ -1,0 +1,9 @@
+{{- imports }}
+
+/**
+ * {{ name.name_part_pascal }} icon from {{ name.namespace_part_pascal or "Default" }} category
+ * Generated from: {{ name.raw_name }}
+ */
+val {{ name.name_part_pascal }}Icon: ImageVector by lazy {
+  {{ build_code | indent(2, first=False) }}
+} 

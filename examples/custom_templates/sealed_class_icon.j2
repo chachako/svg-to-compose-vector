@@ -1,0 +1,9 @@
+{{- imports }}
+
+sealed class {{ name.namespace_part_pascal or "Icons" }} {
+  object {{ name.name_part_pascal }} : {{ name.namespace_part_pascal or "Icons" }}() {
+    val imageVector: ImageVector by lazy {
+      {{ build_code | indent(6, first=False) }}
+    }
+  }
+} 

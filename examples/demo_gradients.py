@@ -7,8 +7,9 @@ It shows how SVG linear and radial gradients are converted to Compose Brush obje
 """
 
 from pathlib import Path
-from src.parser.svg_parser import SvgParser
+
 from src.generator.image_vector_generator import ImageVectorGenerator
+from src.parser.svg_parser import SvgParser
 
 
 def main():
@@ -35,18 +36,18 @@ def main():
 
   parser = SvgParser()
   generator = ImageVectorGenerator()
-  
+
   ir = parser.parse_svg(linear_gradient_svg)
   kotlin_code = generator.generate(ir)
-  
+
   print(f"📊 Parsed {len(ir.nodes)} path(s)")
   print(f"📦 Generated {len(generator.get_required_imports())} imports")
-  
+
   # Save output
   output_file = output_dir / "LinearGradientDemo.kt"
   output_file.write_text(kotlin_code)
   print(f"💾 Saved to {output_file}")
-  
+
   print("\n🎯 Key Features Demonstrated:")
   print("  ✅ Multi-stop linear gradient")
   print("  ✅ Percentage-based offsets")
@@ -70,15 +71,15 @@ def main():
 
   ir2 = parser.parse_svg(circle_as_path_svg)
   kotlin_code2 = generator.generate(ir2)
-  
+
   print(f"📊 Parsed {len(ir2.nodes)} path(s)")
   print(f"📦 Generated {len(generator.get_required_imports())} imports")
-  
+
   # Save output
   output_file2 = output_dir / "RadialGradientDemo.kt"
   output_file2.write_text(kotlin_code2)
   print(f"💾 Saved to {output_file2}")
-  
+
   print("\n🎯 Key Features Demonstrated:")
   print("  ✅ Multi-stop radial gradient")
   print("  ✅ Custom center point (cx, cy)")
@@ -103,15 +104,15 @@ def main():
 
   ir3 = parser.parse_svg(complex_gradient_svg)
   kotlin_code3 = generator.generate(ir3)
-  
+
   print(f"📊 Parsed {len(ir3.nodes)} path(s)")
   print(f"📦 Generated {len(generator.get_required_imports())} imports")
-  
+
   # Save output
   output_file3 = output_dir / "ComplexGradientDemo.kt"
   output_file3.write_text(kotlin_code3)
   print(f"💾 Saved to {output_file3}")
-  
+
   print("\n🎯 Key Features Demonstrated:")
   print("  ✅ 5-stop gradient")
   print("  ✅ Mixed style and attribute definitions")
@@ -131,7 +132,7 @@ def main():
   print("✅ Gradient reference resolution (url(#id))")
   print("✅ Automatic import management")
   print("✅ Fallback to solid colors for missing references")
-  
+
   print(f"\n📁 All output files saved to: {output_dir.absolute()}")
   print("\n🎉 Gradient demo completed successfully!")
 

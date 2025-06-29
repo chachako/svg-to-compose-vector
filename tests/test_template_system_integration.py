@@ -1,12 +1,13 @@
-import pytest
-import tempfile
 import json
+import tempfile
 from pathlib import Path
 
-from src.parser.svg_parser import SvgParser
+import pytest
+
+from src.core.config import Config
 from src.generator.image_vector_generator import ImageVectorGenerator
 from src.generator.template_engine import TemplateEngine
-from src.core.config import Config
+from src.parser.svg_parser import SvgParser
 
 
 class TestTemplateSystemIntegration:
@@ -46,21 +47,18 @@ class TestTemplateSystemIntegration:
     # Parse SVG
     parser = SvgParser()
     ir = parser.parse_svg(simple_svg)
-    
+
     # Generate code
     generator = ImageVectorGenerator()
     core_code, imports = generator.generate_core_code(ir)
-    
+
     # Apply template
     config = Config()
     template_engine = TemplateEngine(config)
     result = template_engine.render(
-      template_name="default",
-      build_code=core_code,
-      imports=imports,
-      icon_name=ir.name
+      template_name="default", build_code=core_code, imports=imports, icon_name=ir.name
     )
-    
+
     # Verify output
     assert "import androidx.compose.ui.graphics.vector.ImageVector" in result
     assert "import androidx.compose.ui.unit.dp" in result
@@ -79,19 +77,16 @@ class TestTemplateSystemIntegration:
     parser = SvgParser()
     ir = parser.parse_svg(simple_svg)
     ir.name = "HomeIcon"  # Set custom name
-    
+
     generator = ImageVectorGenerator()
     core_code, imports = generator.generate_core_code(ir)
-    
+
     config = Config()
     template_engine = TemplateEngine(config)
     result = template_engine.render(
-      template_name="composable_function",
-      build_code=core_code,
-      imports=imports,
-      icon_name=ir.name
+      template_name="composable_function", build_code=core_code, imports=imports, icon_name=ir.name
     )
-    
+
     # Verify composable function structure
     assert "import androidx.compose.runtime.Composable" in result
     assert "import androidx.compose.runtime.remember" in result
@@ -108,19 +103,16 @@ class TestTemplateSystemIntegration:
     parser = SvgParser()
     ir = parser.parse_svg(simple_svg)
     ir.name = "settings_icon"
-    
+
     generator = ImageVectorGenerator()
     core_code, imports = generator.generate_core_code(ir)
-    
+
     config = Config()
     template_engine = TemplateEngine(config)
     result = template_engine.render(
-      template_name="icon_object",
-      build_code=core_code,
-      imports=imports,
-      icon_name=ir.name
+      template_name="icon_object", build_code=core_code, imports=imports, icon_name=ir.name
     )
-    
+
     # Verify object structure
     assert "object SettingsIconIcon {" in result
     assert "val imageVector: ImageVector by lazy {" in result
@@ -130,19 +122,16 @@ class TestTemplateSystemIntegration:
     """Test complete pipeline with val declaration template."""
     parser = SvgParser()
     ir = parser.parse_svg(simple_svg)
-    
+
     generator = ImageVectorGenerator()
     core_code, imports = generator.generate_core_code(ir)
-    
+
     config = Config()
     template_engine = TemplateEngine(config)
     result = template_engine.render(
-      template_name="val_declaration",
-      build_code=core_code,
-      imports=imports,
-      icon_name=ir.name
+      template_name="val_declaration", build_code=core_code, imports=imports, icon_name=ir.name
     )
-    
+
     # Verify val declaration is generated
     assert "val UnnamedIconIcon: ImageVector = ImageVector.Builder(" in result
 
@@ -168,26 +157,26 @@ val Icons.Default.{{ icon_name | pascal_case }}: ImageVector
   }
 
 private var _{{ icon_name | camel_case }}: ImageVector? = null"""
-      
+
       template_path.write_text(template_content)
-      
+
       # Parse and generate
       parser = SvgParser()
       ir = parser.parse_svg(simple_svg)
       ir.name = "my_custom_icon"
-      
+
       generator = ImageVectorGenerator()
       core_code, imports = generator.generate_core_code(ir)
-      
+
       config = Config(template_path=template_path)
       template_engine = TemplateEngine(config)
       result = template_engine.render(
         template_name="default",  # Ignored when custom template is set
         build_code=core_code,
         imports=imports,
-        icon_name=ir.name
+        icon_name=ir.name,
       )
-      
+
       # Verify custom template output (PascalCase conversion behavior)
       assert "Generated icon: MyCustomIcon" in result
       assert "val Icons.Default.MyCustomIcon: ImageVector" in result
@@ -198,19 +187,19 @@ private var _{{ icon_name | camel_case }}: ImageVector? = null"""
     """Test complete pipeline with complex SVG (groups, gradients)."""
     parser = SvgParser()
     ir = parser.parse_svg(complex_svg)
-    
+
     generator = ImageVectorGenerator()
     core_code, imports = generator.generate_core_code(ir)
-    
+
     config = Config()
     template_engine = TemplateEngine(config)
     result = template_engine.render(
       template_name="composable_function",
       build_code=core_code,
       imports=imports,
-      icon_name="ComplexIcon"
+      icon_name="ComplexIcon",
     )
-    
+
     # Verify complex features are handled
     assert "import androidx.compose.ui.graphics.Brush" in result
     assert "import androidx.compose.ui.geometry.Offset" in result
@@ -226,80 +215,71 @@ private var _{{ icon_name | camel_case }}: ImageVector? = null"""
     with tempfile.TemporaryDirectory() as temp_dir:
       # Create config file
       config_path = Path(temp_dir) / "config.json"
-      config_data = {
-        "indent_size": 4,
-        "group_imports": False
-      }
-      
-      with open(config_path, 'w') as f:
+      config_data = {"indent_size": 4, "group_imports": False}
+
+      with open(config_path, "w") as f:
         json.dump(config_data, f)
-      
+
       # Load config and process
       config = Config.from_file(config_path)
-      
+
       parser = SvgParser()
       ir = parser.parse_svg(simple_svg)
-      
+
       generator = ImageVectorGenerator()
       core_code, imports = generator.generate_core_code(ir)
-      
+
       template_engine = TemplateEngine(config)
       result = template_engine.render(
-        template_name="default",
-        build_code=core_code,
-        imports=imports,
-        icon_name=ir.name
+        template_name="default", build_code=core_code, imports=imports, icon_name=ir.name
       )
-      
+
       # Verify basic generation works
       assert "ImageVector.Builder(" in result
-      
+
       # Verify imports are not grouped (group_imports: false)
-      lines = result.split('\n')
-      import_lines = [line for line in lines if line.startswith('import')]
+      lines = result.split("\n")
+      import_lines = [line for line in lines if line.startswith("import")]
       # Should not have empty lines between imports when grouping is disabled
       for i in range(len(import_lines) - 1):
         next_line_index = lines.index(import_lines[i]) + 1
         if next_line_index < len(lines):
           next_line = lines[next_line_index]
-          if next_line.startswith('import'):
+          if next_line.startswith("import"):
             # No empty line between consecutive imports
             assert True
           elif next_line == "":
             # If there's an empty line, next non-empty should not be import
             for j in range(next_line_index + 1, len(lines)):
               if lines[j] != "":
-                assert not lines[j].startswith('import')
+                assert not lines[j].startswith("import")
                 break
 
   def test_name_conversion_filters(self, simple_svg):
     """Test name conversion filters in templates."""
     parser = SvgParser()
     ir = parser.parse_svg(simple_svg)
-    
+
     # Test various name formats
     test_names = [
       "simple_name",
-      "kebab-case-name", 
+      "kebab-case-name",
       "camelCaseName",
       "PascalCaseName",
-      "mixed_Format-Name"
+      "mixed_Format-Name",
     ]
-    
+
     generator = ImageVectorGenerator()
     core_code, imports = generator.generate_core_code(ir)
-    
+
     config = Config()
     template_engine = TemplateEngine(config)
-    
+
     for name in test_names:
       result = template_engine.render(
-        template_name="composable_function",
-        build_code=core_code,
-        imports=imports,
-        icon_name=name
+        template_name="composable_function", build_code=core_code, imports=imports, icon_name=name
       )
-      
+
       # Should always generate valid Kotlin function names
       assert "fun " in result
       # Function name should be in PascalCase format
@@ -312,33 +292,30 @@ private var _{{ icon_name | camel_case }}: ImageVector? = null"""
     """Test that template engine correctly handles gradient imports."""
     parser = SvgParser()
     ir = parser.parse_svg(complex_svg)
-    
+
     generator = ImageVectorGenerator()
     core_code, imports = generator.generate_core_code(ir)
-    
+
     # Should include gradient-related imports
     assert "androidx.compose.ui.graphics.Brush" in imports
     assert "androidx.compose.ui.geometry.Offset" in imports
-    
+
     config = Config(group_imports=True)
     template_engine = TemplateEngine(config)
     result = template_engine.render(
-      template_name="default",
-      build_code=core_code,
-      imports=imports,
-      icon_name="TestIcon"
+      template_name="default", build_code=core_code, imports=imports, icon_name="TestIcon"
     )
-    
+
     # Verify imports are properly formatted and grouped
     assert "import androidx.compose.ui.graphics.Brush" in result
     assert "import androidx.compose.ui.geometry.Offset" in result
-    
+
     # Imports should be at the top
-    lines = result.split('\n')
-    first_import_line = next(i for i, line in enumerate(lines) if line.startswith('import'))
-    last_import_line = max(i for i, line in enumerate(lines) if line.startswith('import'))
-    
+    lines = result.split("\n")
+    first_import_line = next(i for i, line in enumerate(lines) if line.startswith("import"))
+    last_import_line = max(i for i, line in enumerate(lines) if line.startswith("import"))
+
     # All imports should be consecutive (with possible empty lines for grouping)
     for i in range(first_import_line, last_import_line + 1):
       line = lines[i]
-      assert line.startswith('import') or line == ""
+      assert line.startswith("import") or line == ""

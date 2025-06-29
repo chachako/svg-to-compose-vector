@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List
+
 from ..utils.formatting import format_float
 
 
@@ -253,7 +253,7 @@ class IrRelativeArcTo(IrPathNode):
     )
 
 
-def path_data_to_dsl(path_nodes: List[IrPathNode]) -> str:
+def path_data_to_dsl(path_nodes: list[IrPathNode]) -> str:
   """Convert list of path nodes to Compose pathData DSL calls."""
   if not path_nodes:
     return ""

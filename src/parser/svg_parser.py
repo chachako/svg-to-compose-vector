@@ -1,27 +1,28 @@
-import xml.etree.ElementTree as ET
 import re
-from typing import List, Optional, Dict, Any, Union
+import xml.etree.ElementTree as ET
 from pathlib import Path
-from ..ir.image_vector import IrImageVector
-from ..ir.vector_node import IrVectorNode, IrVectorPath, IrVectorGroup
+from typing import Any
+
 from ..ir.color import IrColor
-from ..ir.gradient import IrFill, IrColorFill
+from ..ir.gradient import IrColorFill, IrFill
+from ..ir.image_vector import IrImageVector
 from ..ir.path_node import IrPathNode
+from ..ir.vector_node import IrVectorGroup, IrVectorNode, IrVectorPath
+from .gradient_parser import GradientParser
 from .path_parser import PathParser
 from .transform_parser import TransformParser
-from .gradient_parser import GradientParser
 
 
 class ParseContext:
   """Context for tracking parsing state."""
 
   def __init__(self):
-    self.defs_cache: Dict[str, Any] = {}
-    self.parent_styles: Dict[str, str] = {}
-    self.transform_stack: List[str] = []
-    self.gradients: Dict[str, IrFill] = {}
-    self.clip_paths: Dict[str, List[IrPathNode]] = {}
-    self.warnings: List[str] = []
+    self.defs_cache: dict[str, Any] = {}
+    self.parent_styles: dict[str, str] = {}
+    self.transform_stack: list[str] = []
+    self.gradients: dict[str, IrFill] = {}
+    self.clip_paths: dict[str, list[IrPathNode]] = {}
+    self.warnings: list[str] = []
 
 
 class SvgParser:
@@ -32,7 +33,7 @@ class SvgParser:
     self.transform_parser = TransformParser()
     self.gradient_parser = GradientParser()
 
-  def parse_svg(self, input_source: Union[str, Path]) -> IrImageVector:
+  def parse_svg(self, input_source: str | Path) -> IrImageVector:
     """Parse SVG from file path (Path) or SVG content (str)."""
     if isinstance(input_source, Path):
       # It's a Path object - read file
@@ -138,7 +139,7 @@ class SvgParser:
     except ValueError:
       return 24.0
 
-  def _parse_element(self, element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+  def _parse_element(self, element: ET.Element, context: ParseContext) -> list[IrVectorNode]:
     """Parse an SVG element and return vector nodes."""
     # Get tag name without namespace
     tag = element.tag.split("}")[-1] if "}" in element.tag else element.tag
@@ -174,29 +175,41 @@ class SvgParser:
       return []
     elif tag in ["text", "tspan", "textPath"]:
       # Text elements are not supported by Compose ImageVector
-      context.warnings.append(f"Text element '<{tag}>' is not supported by Compose ImageVector - text will be ignored")
+      context.warnings.append(
+        f"Text element '<{tag}>' is not supported by Compose ImageVector - text will be ignored"
+      )
       return []
     elif tag in ["marker", "use", "symbol", "switch"]:
       # Advanced SVG features not supported by Compose ImageVector
-      context.warnings.append(f"Advanced SVG element '<{tag}>' is not supported by Compose ImageVector - element will be ignored")
+      context.warnings.append(
+        f"Advanced SVG element '<{tag}>' is not supported by Compose ImageVector - element will be ignored"
+      )
       return []
     elif tag in ["filter", "feTurbulence", "feGaussianBlur", "feOffset", "feFlood", "feComposite"]:
       # Filter effects not supported by Compose ImageVector
-      context.warnings.append(f"Filter element '<{tag}>' is not supported by Compose ImageVector - filters will be ignored")
+      context.warnings.append(
+        f"Filter element '<{tag}>' is not supported by Compose ImageVector - filters will be ignored"
+      )
       return []
     elif tag in ["animate", "animateTransform", "animateMotion", "set"]:
       # Animation elements not supported by Compose ImageVector
-      context.warnings.append(f"Animation element '<{tag}>' is not supported by Compose ImageVector - animations will be ignored")
+      context.warnings.append(
+        f"Animation element '<{tag}>' is not supported by Compose ImageVector - animations will be ignored"
+      )
       return []
     elif tag in ["image", "foreignObject"]:
       # Embedded content not supported by Compose ImageVector
-      context.warnings.append(f"Embedded content element '<{tag}>' is not supported by Compose ImageVector - content will be ignored")
+      context.warnings.append(
+        f"Embedded content element '<{tag}>' is not supported by Compose ImageVector - content will be ignored"
+      )
       return []
     else:
       # For other unknown elements, check if they're unsupported first
       if tag not in ["svg", "g", "defs", "clipPath"]:  # Known container elements
-        context.warnings.append(f"Unknown SVG element '<{tag}>' encountered - element will be ignored")
-      
+        context.warnings.append(
+          f"Unknown SVG element '<{tag}>' encountered - element will be ignored"
+        )
+
       # Try to recursively parse children
       nodes = []
       for child in element:
@@ -206,11 +219,11 @@ class SvgParser:
 
   def _parse_path_element(
     self, path_element: ET.Element, context: ParseContext
-  ) -> List[IrVectorNode]:
+  ) -> list[IrVectorNode]:
     """Parse a path element."""
     # Check for unsupported child elements first
     self._check_unsupported_children(path_element, context)
-    
+
     path_data = path_element.get("d")
     if not path_data:
       return []
@@ -251,53 +264,52 @@ class SvgParser:
 
   def _parse_group_element(
     self, group_element: ET.Element, context: ParseContext
-  ) -> List[IrVectorNode]:
+  ) -> list[IrVectorNode]:
     """Parse a group element with support for transforms and clip paths."""
     # Parse group attributes
     group_name = group_element.get("id", "group")
     transform_str = group_element.get("transform", "")
     clip_path_str = self._get_attribute_or_style(group_element, "clip-path")
-    
+
     # Parse child elements
     children = []
     for child in group_element:
       child_nodes = self._parse_element(child, context)
       children.extend(child_nodes)
-    
+
     # If no children, return empty list
     if not children:
       return []
-    
+
     # Parse transform if present
     transform_params = {}
     if transform_str:
       transform_params = self.transform_parser.parse_transform_to_group_params(transform_str)
-    
+
     # Parse clip path if present
     clip_path_data = []
-    has_clip_path_attribute = clip_path_str and clip_path_str.startswith("url(#") and clip_path_str.endswith(")")
+    has_clip_path_attribute = (
+      clip_path_str and clip_path_str.startswith("url(#") and clip_path_str.endswith(")")
+    )
     if has_clip_path_attribute:
       clip_path_id = clip_path_str[5:-1]  # Remove "url(#" and ")"
       if clip_path_id in context.clip_paths:
         clip_path_data = context.clip_paths[clip_path_id]
-    
+
     # If no transform, clip path attribute, and only one child, we can flatten to avoid unnecessary nesting
-    # Note: we check has_clip_path_attribute rather than clip_path_data to preserve groups 
+    # Note: we check has_clip_path_attribute rather than clip_path_data to preserve groups
     # that reference clipPaths even if the clipPath is empty
     if not transform_params and not has_clip_path_attribute and len(children) == 1:
       return children
-    
+
     # Create group node
     group = IrVectorGroup(
-      children=children,
-      name=group_name,
-      clip_path_data=clip_path_data,
-      **transform_params
+      children=children, name=group_name, clip_path_data=clip_path_data, **transform_params
     )
-    
+
     return [group]
 
-  def _parse_fill(self, element: ET.Element, context: ParseContext) -> Optional[IrFill]:
+  def _parse_fill(self, element: ET.Element, context: ParseContext) -> IrFill | None:
     """Parse fill attribute, supporting colors and gradients."""
     fill_str = self._get_attribute_or_style(element, "fill")
 
@@ -330,7 +342,7 @@ class SvgParser:
     # Fallback to black if we can't parse
     return IrColorFill(color=IrColor.from_hex("#000000"))
 
-  def _parse_stroke(self, element: ET.Element, context: ParseContext) -> Optional[Union[IrColor, IrFill]]:
+  def _parse_stroke(self, element: ET.Element, context: ParseContext) -> IrColor | IrFill | None:
     """Parse stroke attribute, supporting colors and gradients."""
     stroke_str = self._get_attribute_or_style(element, "stroke")
 
@@ -440,7 +452,7 @@ class SvgParser:
     return properties
 
   def _get_attribute_or_style(
-    self, element: ET.Element, attr_name: str, style_name: str = None
+    self, element: ET.Element, attr_name: str, style_name: str | None = None
   ) -> str:
     """Get value from attribute or style, with style taking precedence."""
     if style_name is None:
@@ -454,7 +466,9 @@ class SvgParser:
     # Fall back to direct attribute
     return element.get(attr_name, "")
 
-  def _parse_defs_element(self, defs_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+  def _parse_defs_element(
+    self, defs_element: ET.Element, context: ParseContext
+  ) -> list[IrVectorNode]:
     """Parse defs element, which contains reusable elements like gradients."""
     # Process all children and cache them
     for child in defs_element:
@@ -470,7 +484,7 @@ class SvgParser:
     # Use a reasonable viewport size for gradient calculations
     viewport_width = 100.0
     viewport_height = 100.0
-    
+
     gradient = self.gradient_parser.parse_linear_gradient(element, viewport_width, viewport_height)
     context.gradients[gradient_id] = gradient
 
@@ -483,11 +497,13 @@ class SvgParser:
     # Use a reasonable viewport size for gradient calculations
     viewport_width = 100.0
     viewport_height = 100.0
-    
+
     gradient = self.gradient_parser.parse_radial_gradient(element, viewport_width, viewport_height)
     context.gradients[gradient_id] = gradient
 
-  def _parse_rect_element(self, rect_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+  def _parse_rect_element(
+    self, rect_element: ET.Element, context: ParseContext
+  ) -> list[IrVectorNode]:
     """Parse rect element and convert to path."""
     # Parse rect attributes
     x = float(rect_element.get("x", "0"))
@@ -532,7 +548,9 @@ class SvgParser:
 
     return self._convert_path_data_to_vector_path(path_data, rect_element, context)
 
-  def _parse_circle_element(self, circle_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+  def _parse_circle_element(
+    self, circle_element: ET.Element, context: ParseContext
+  ) -> list[IrVectorNode]:
     """Parse circle element and convert to path."""
     cx = float(circle_element.get("cx", "0"))
     cy = float(circle_element.get("cy", "0"))
@@ -552,7 +570,9 @@ class SvgParser:
 
     return self._convert_path_data_to_vector_path(path_data, circle_element, context)
 
-  def _parse_ellipse_element(self, ellipse_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+  def _parse_ellipse_element(
+    self, ellipse_element: ET.Element, context: ParseContext
+  ) -> list[IrVectorNode]:
     """Parse ellipse element and convert to path."""
     cx = float(ellipse_element.get("cx", "0"))
     cy = float(ellipse_element.get("cy", "0"))
@@ -573,7 +593,9 @@ class SvgParser:
 
     return self._convert_path_data_to_vector_path(path_data, ellipse_element, context)
 
-  def _parse_line_element(self, line_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+  def _parse_line_element(
+    self, line_element: ET.Element, context: ParseContext
+  ) -> list[IrVectorNode]:
     """Parse line element and convert to path."""
     x1 = float(line_element.get("x1", "0"))
     y1 = float(line_element.get("y1", "0"))
@@ -585,7 +607,9 @@ class SvgParser:
 
     return self._convert_path_data_to_vector_path(path_data, line_element, context)
 
-  def _parse_polygon_element(self, polygon_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+  def _parse_polygon_element(
+    self, polygon_element: ET.Element, context: ParseContext
+  ) -> list[IrVectorNode]:
     """Parse polygon element and convert to path."""
     points_str = polygon_element.get("points", "")
     if not points_str:
@@ -603,7 +627,9 @@ class SvgParser:
 
     return self._convert_path_data_to_vector_path(path_data, polygon_element, context)
 
-  def _parse_polyline_element(self, polyline_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+  def _parse_polyline_element(
+    self, polyline_element: ET.Element, context: ParseContext
+  ) -> list[IrVectorNode]:
     """Parse polyline element and convert to path."""
     points_str = polyline_element.get("points", "")
     if not points_str:
@@ -620,17 +646,17 @@ class SvgParser:
 
     return self._convert_path_data_to_vector_path(path_data, polyline_element, context)
 
-  def _parse_points_string(self, points_str: str) -> List[tuple[float, float]]:
+  def _parse_points_string(self, points_str: str) -> list[tuple[float, float]]:
     """Parse points string into list of coordinate pairs."""
     # Clean up the points string - handle various separators
     points_str = points_str.strip()
-    
+
     # Replace commas and multiple spaces with single spaces
-    points_str = re.sub(r'[,\s]+', ' ', points_str)
-    
+    points_str = re.sub(r"[,\s]+", " ", points_str)
+
     # Split into individual numbers
     coords = points_str.split()
-    
+
     # Group into coordinate pairs
     points = []
     for i in range(0, len(coords) - 1, 2):
@@ -641,14 +667,16 @@ class SvgParser:
       except (ValueError, IndexError):
         # Skip invalid coordinate pairs
         continue
-    
+
     return points
 
-  def _convert_path_data_to_vector_path(self, path_data: str, element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+  def _convert_path_data_to_vector_path(
+    self, path_data: str, element: ET.Element, context: ParseContext
+  ) -> list[IrVectorNode]:
     """Convert path data string to IrVectorPath using existing path parser."""
     # First check for any unsupported child elements
     self._check_unsupported_children(element, context)
-    
+
     try:
       path_nodes = self.path_parser.parse_path_data(path_data)
     except Exception as e:
@@ -686,22 +714,41 @@ class SvgParser:
     """Check for unsupported child elements and add warnings."""
     for child in element:
       tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
-      
+
       if tag in ["text", "tspan", "textPath"]:
-        context.warnings.append(f"Text element '<{tag}>' is not supported by Compose ImageVector - text will be ignored")
+        context.warnings.append(
+          f"Text element '<{tag}>' is not supported by Compose ImageVector - text will be ignored"
+        )
       elif tag in ["marker", "use", "symbol", "switch"]:
-        context.warnings.append(f"Advanced SVG element '<{tag}>' is not supported by Compose ImageVector - element will be ignored")
-      elif tag in ["filter", "feTurbulence", "feGaussianBlur", "feOffset", "feFlood", "feComposite"]:
-        context.warnings.append(f"Filter element '<{tag}>' is not supported by Compose ImageVector - filters will be ignored")
+        context.warnings.append(
+          f"Advanced SVG element '<{tag}>' is not supported by Compose ImageVector - element will be ignored"
+        )
+      elif tag in [
+        "filter",
+        "feTurbulence",
+        "feGaussianBlur",
+        "feOffset",
+        "feFlood",
+        "feComposite",
+      ]:
+        context.warnings.append(
+          f"Filter element '<{tag}>' is not supported by Compose ImageVector - filters will be ignored"
+        )
       elif tag in ["animate", "animateTransform", "animateMotion", "set"]:
-        context.warnings.append(f"Animation element '<{tag}>' is not supported by Compose ImageVector - animations will be ignored")
+        context.warnings.append(
+          f"Animation element '<{tag}>' is not supported by Compose ImageVector - animations will be ignored"
+        )
       elif tag in ["image", "foreignObject"]:
-        context.warnings.append(f"Embedded content element '<{tag}>' is not supported by Compose ImageVector - content will be ignored")
-      
+        context.warnings.append(
+          f"Embedded content element '<{tag}>' is not supported by Compose ImageVector - content will be ignored"
+        )
+
       # Recursively check nested children
       self._check_unsupported_children(child, context)
 
-  def _parse_clippath_element(self, clippath_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+  def _parse_clippath_element(
+    self, clippath_element: ET.Element, context: ParseContext
+  ) -> list[IrVectorNode]:
     """Parse clipPath element and store path data in context."""
     clippath_id = clippath_element.get("id")
     if not clippath_id:
@@ -709,11 +756,11 @@ class SvgParser:
 
     # Collect all path data from children
     clip_path_nodes = []
-    
+
     for child in clippath_element:
       # Parse child elements to get their path data
       child_nodes = self._parse_element(child, context)
-      
+
       # Extract path data from IrVectorPath nodes
       for node in child_nodes:
         if isinstance(node, IrVectorPath):
@@ -721,14 +768,14 @@ class SvgParser:
         elif isinstance(node, IrVectorGroup):
           # Recursively extract paths from groups
           self._extract_paths_from_group(node, clip_path_nodes)
-    
+
     # Store the clip path data in context
     context.clip_paths[clippath_id] = clip_path_nodes
-    
+
     # clipPath elements don't generate visible content themselves
     return []
 
-  def _extract_paths_from_group(self, group: IrVectorGroup, path_list: List[IrPathNode]) -> None:
+  def _extract_paths_from_group(self, group: IrVectorGroup, path_list: list[IrPathNode]) -> None:
     """Recursively extract path nodes from a group and its children."""
     for child in group.children:
       if isinstance(child, IrVectorPath):

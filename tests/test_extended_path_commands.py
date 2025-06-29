@@ -1,14 +1,14 @@
-from src.parser.path_parser import PathParser
 from src.ir.path_node import (
-  IrQuadTo,
-  IrRelativeQuadTo,
-  IrReflectiveCurveTo,
-  IrRelativeReflectiveCurveTo,
-  IrReflectiveQuadTo,
-  IrRelativeReflectiveQuadTo,
   IrArcTo,
+  IrQuadTo,
+  IrReflectiveCurveTo,
+  IrReflectiveQuadTo,
   IrRelativeArcTo,
+  IrRelativeQuadTo,
+  IrRelativeReflectiveCurveTo,
+  IrRelativeReflectiveQuadTo,
 )
+from src.parser.path_parser import PathParser
 
 
 class TestExtendedPathCommands:
@@ -126,7 +126,7 @@ class TestExtendedPathCommands:
     assert len(nodes) == 6
 
     # Verify specific node types
-    from src.ir.path_node import IrMoveTo, IrClose
+    from src.ir.path_node import IrClose, IrMoveTo
 
     assert isinstance(nodes[0], IrMoveTo)
     assert isinstance(nodes[1], IrQuadTo)
@@ -166,8 +166,8 @@ class TestExtendedPathCommands:
 
 def test_end_to_end_advanced_path():
   """Test end-to-end conversion with advanced path commands."""
-  from src.parser.svg_parser import SvgParser
   from src.generator.image_vector_generator import ImageVectorGenerator
+  from src.parser.svg_parser import SvgParser
 
   svg_content = """
   <svg width="100" height="100" viewBox="0 0 100 100">

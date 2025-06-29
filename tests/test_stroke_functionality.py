@@ -1,6 +1,6 @@
-from src.parser.svg_parser import SvgParser
 from src.generator.image_vector_generator import ImageVectorGenerator
 from src.ir.gradient import IrLinearGradient, IrRadialGradient
+from src.parser.svg_parser import SvgParser
 
 
 class TestStrokeFunctionality:
@@ -27,10 +27,10 @@ class TestStrokeFunctionality:
     """Test parsing stroke and fill opacity."""
     svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 0 0 L 10 10" 
-            stroke="blue" 
-            stroke-opacity="0.5" 
-            fill="red" 
+      <path d="M 0 0 L 10 10"
+            stroke="blue"
+            stroke-opacity="0.5"
+            fill="red"
             fill-opacity="0.8"/>
     </svg>"""
 
@@ -71,9 +71,9 @@ class TestStrokeFunctionality:
     """Test stroke code generation."""
     svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 0 0 L 10 10" 
-            stroke="#00FF00" 
-            stroke-width="3" 
+      <path d="M 0 0 L 10 10"
+            stroke="#00FF00"
+            stroke-width="3"
             stroke-opacity="0.7"
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -100,9 +100,9 @@ class TestStrokeFunctionality:
     """Test stroke with fill combination."""
     svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 0 0 L 10 0 L 10 10 L 0 10 Z" 
-            stroke="red" 
-            stroke-width="1" 
+      <path d="M 0 0 L 10 0 L 10 10 L 0 10 Z"
+            stroke="red"
+            stroke-width="1"
             fill="blue"/>
     </svg>"""
 
@@ -157,13 +157,13 @@ def test_stroke_integration_example():
   """Integration test with complex stroke example."""
   svg_content = """<?xml version="1.0" encoding="UTF-8"?>
   <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <path d="M 10 10 L 90 10 L 90 90 L 10 90 Z" 
-          stroke="#2196F3" 
-          stroke-width="4" 
+    <path d="M 10 10 L 90 10 L 90 90 L 10 90 Z"
+          stroke="#2196F3"
+          stroke-width="4"
           stroke-opacity="0.8"
           stroke-linecap="round"
           stroke-linejoin="round"
-          fill="#FFEB3B" 
+          fill="#FFEB3B"
           fill-opacity="0.6"/>
   </svg>"""
 
@@ -192,7 +192,7 @@ class TestStrokeGradientSupport:
 
   def test_stroke_linear_gradient_parsing(self):
     """Test parsing stroke with linear gradient."""
-    svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
+    svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="strokeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -201,21 +201,21 @@ class TestStrokeGradientSupport:
         </linearGradient>
       </defs>
       <path d="M10 10 L90 90" stroke="url(#strokeGrad)" stroke-width="3" fill="none"/>
-    </svg>'''
+    </svg>"""
 
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
 
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
-    
+
     # Check that stroke is a linear gradient
     assert isinstance(path.stroke, IrLinearGradient)
     assert path.stroke.start_x == 0.0
     assert path.stroke.start_y == 0.0
     assert path.stroke.end_x == 100.0
     assert path.stroke.end_y == 0.0
-    
+
     # Check gradient stops
     assert len(path.stroke.color_stops) == 2
     assert path.stroke.color_stops[0].offset == 0.0
@@ -225,7 +225,7 @@ class TestStrokeGradientSupport:
 
   def test_stroke_radial_gradient_parsing(self):
     """Test parsing stroke with radial gradient."""
-    svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
+    svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <radialGradient id="strokeRadial" cx="50%" cy="50%" r="50%">
@@ -234,20 +234,20 @@ class TestStrokeGradientSupport:
         </radialGradient>
       </defs>
       <path d="M20 20 L80 80" stroke="url(#strokeRadial)" stroke-width="5" fill="none"/>
-    </svg>'''
+    </svg>"""
 
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
 
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
-    
+
     # Check that stroke is a radial gradient
     assert isinstance(path.stroke, IrRadialGradient)
     assert path.stroke.center_x == 50.0
     assert path.stroke.center_y == 50.0
     assert path.stroke.radius == 50.0
-    
+
     # Check gradient stops
     assert len(path.stroke.color_stops) == 2
     assert path.stroke.color_stops[0].offset == 0.0
@@ -257,7 +257,7 @@ class TestStrokeGradientSupport:
 
   def test_stroke_linear_gradient_code_generation(self):
     """Test code generation for stroke with linear gradient."""
-    svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
+    svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="myGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -266,7 +266,7 @@ class TestStrokeGradientSupport:
         </linearGradient>
       </defs>
       <path d="M10 10 L90 90" stroke="url(#myGrad)" stroke-width="2" fill="none"/>
-    </svg>'''
+    </svg>"""
 
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
@@ -285,7 +285,7 @@ class TestStrokeGradientSupport:
 
   def test_stroke_radial_gradient_code_generation(self):
     """Test code generation for stroke with radial gradient."""
-    svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
+    svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <radialGradient id="radGrad" cx="50%" cy="50%" r="50%">
@@ -294,7 +294,7 @@ class TestStrokeGradientSupport:
         </radialGradient>
       </defs>
       <path d="M20 20 L80 80" stroke="url(#radGrad)" stroke-width="3" fill="none"/>
-    </svg>'''
+    </svg>"""
 
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
@@ -313,7 +313,7 @@ class TestStrokeGradientSupport:
 
   def test_stroke_and_fill_both_gradients(self):
     """Test path with both stroke and fill using gradients."""
-    svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
+    svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="strokeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -325,11 +325,11 @@ class TestStrokeGradientSupport:
           <stop offset="100%" style="stop-color:black;stop-opacity:1" />
         </radialGradient>
       </defs>
-      <path d="M10 10 L90 10 L90 90 L10 90 Z" 
-            stroke="url(#strokeGrad)" 
-            fill="url(#fillGrad)" 
+      <path d="M10 10 L90 10 L90 90 L10 90 Z"
+            stroke="url(#strokeGrad)"
+            fill="url(#fillGrad)"
             stroke-width="4"/>
-    </svg>'''
+    </svg>"""
 
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
@@ -341,7 +341,7 @@ class TestStrokeGradientSupport:
     assert "fill = Brush.radialGradient(" in code
     assert "stroke = Brush.linearGradient(" in code
     assert "strokeLineWidth = 4f" in code
-    
+
     # Check that proper imports are included
     imports = generator.get_required_imports()
     assert "androidx.compose.ui.graphics.Brush" in imports

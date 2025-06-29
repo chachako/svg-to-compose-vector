@@ -1,26 +1,26 @@
 import re
-from typing import List, Tuple
+
 from ..ir.path_node import (
-  IrPathNode,
+  IrArcTo,
   IrClose,
-  IrMoveTo,
-  IrLineTo,
-  IrHorizontalTo,
-  IrVerticalTo,
   IrCurveTo,
+  IrHorizontalTo,
+  IrLineTo,
+  IrMoveTo,
+  IrPathNode,
   IrQuadTo,
   IrReflectiveCurveTo,
   IrReflectiveQuadTo,
-  IrArcTo,
-  IrRelativeMoveTo,
-  IrRelativeLineTo,
-  IrRelativeHorizontalTo,
-  IrRelativeVerticalTo,
+  IrRelativeArcTo,
   IrRelativeCurveTo,
+  IrRelativeHorizontalTo,
+  IrRelativeLineTo,
+  IrRelativeMoveTo,
   IrRelativeQuadTo,
   IrRelativeReflectiveCurveTo,
   IrRelativeReflectiveQuadTo,
-  IrRelativeArcTo,
+  IrRelativeVerticalTo,
+  IrVerticalTo,
 )
 
 
@@ -31,7 +31,7 @@ class PathParser:
     self.position = 0
     self.path_string = ""
 
-  def parse_path_data(self, path_string: str) -> List[IrPathNode]:
+  def parse_path_data(self, path_string: str) -> list[IrPathNode]:
     """Parse SVG path data string into IrPathNode list."""
     self.path_string = path_string.strip()
     self.position = 0
@@ -83,13 +83,13 @@ class PathParser:
     self.position += len(number_str)
     return float(number_str)
 
-  def _read_coordinate_pair(self) -> Tuple[float, float]:
+  def _read_coordinate_pair(self) -> tuple[float, float]:
     """Read x,y coordinate pair."""
     x = self._read_number()
     y = self._read_number()
     return (x, y)
 
-  def _parse_command(self, command: str) -> List[IrPathNode]:
+  def _parse_command(self, command: str) -> list[IrPathNode]:
     """Parse specific command with its parameters."""
     nodes = []
 

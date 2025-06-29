@@ -1,16 +1,15 @@
-from typing import List, Set, Tuple
+from ..ir.gradient import IrColorFill, IrFill, IrLinearGradient, IrRadialGradient
 from ..ir.image_vector import IrImageVector
-from ..ir.vector_node import IrVectorNode, IrVectorPath, IrVectorGroup
 from ..ir.path_node import path_data_to_dsl
-from ..ir.gradient import IrFill, IrColorFill, IrLinearGradient, IrRadialGradient
-from ..utils.formatting import format_float, format_dp
+from ..ir.vector_node import IrVectorGroup, IrVectorNode, IrVectorPath
+from ..utils.formatting import format_dp, format_float
 
 
 class ImageVectorGenerator:
   """Generates Kotlin ImageVector code from IR."""
 
   def __init__(self):
-    self.imports: Set[str] = set()
+    self.imports: set[str] = set()
     self.indent_level = 0
 
   def generate(self, ir: IrImageVector) -> str:
@@ -18,7 +17,7 @@ class ImageVectorGenerator:
     core_code, _ = self.generate_core_code(ir)
     return core_code
 
-  def generate_core_code(self, ir: IrImageVector) -> Tuple[str, Set[str]]:
+  def generate_core_code(self, ir: IrImageVector) -> tuple[str, set[str]]:
     """Generate ImageVector.Builder(...).build() code and return imports."""
     self.imports.clear()
     self.indent_level = 0
@@ -49,7 +48,7 @@ class ImageVectorGenerator:
 
     return "\n".join(lines), self.imports.copy()
 
-  def _generate_node(self, node: IrVectorNode) -> List[str]:
+  def _generate_node(self, node: IrVectorNode) -> list[str]:
     """Generate code for a vector node (path or group)."""
     if isinstance(node, IrVectorPath):
       return self._generate_path(node)
@@ -58,7 +57,7 @@ class ImageVectorGenerator:
     else:
       raise ValueError(f"Unknown node type: {type(node)}")
 
-  def _generate_path(self, path: IrVectorPath) -> List[str]:
+  def _generate_path(self, path: IrVectorPath) -> list[str]:
     """Generate path { } block."""
     lines = []
     indent = "  " * self.indent_level
@@ -125,7 +124,7 @@ class ImageVectorGenerator:
 
     return lines
 
-  def _generate_group(self, group: IrVectorGroup) -> List[str]:
+  def _generate_group(self, group: IrVectorGroup) -> list[str]:
     """Generate group { } block."""
     lines = []
     indent = "  " * self.indent_level
@@ -174,7 +173,9 @@ class ImageVectorGenerator:
 
       if has_clip_path:
         self.imports.add("androidx.compose.ui.graphics.vector.PathNode")
-        clip_path_code = self._generate_clip_path_data(group.clip_path_data, indent_level=self.indent_level + 1)
+        clip_path_code = self._generate_clip_path_data(
+          group.clip_path_data, indent_level=self.indent_level + 1
+        )
         lines.append(f"{indent}  clipPathData = {clip_path_code},")
 
       lines.append(f"{indent}) {{")
@@ -223,7 +224,7 @@ class ImageVectorGenerator:
       return fill_type_map[fill_type]
     return "PathFillType.NonZero"
 
-  def get_required_imports(self) -> List[str]:
+  def get_required_imports(self) -> list[str]:
     """Get list of required imports for generated code."""
     return sorted(list(self.imports))
 
@@ -233,7 +234,7 @@ class ImageVectorGenerator:
       self.imports.add("androidx.compose.ui.graphics.Color")
       self.imports.add("androidx.compose.ui.graphics.SolidColor")
       return self._generate_solid_color_code(fill.color)
-    elif isinstance(fill, (IrLinearGradient, IrRadialGradient)):
+    elif isinstance(fill, IrLinearGradient | IrRadialGradient):
       self.imports.add("androidx.compose.ui.graphics.Brush")
       self.imports.add("androidx.compose.ui.geometry.Offset")
       # Calculate proper indentation for gradient parameters
@@ -248,7 +249,7 @@ class ImageVectorGenerator:
   def _generate_solid_color_code(self, color) -> str:
     """Generate SolidColor code for color, preferring named constants."""
     self.imports.add("androidx.compose.ui.graphics.Color")
-    
+
     # Try to use named color constants first
     named_color = color.to_compose_color_name()
     if named_color and color.alpha == 255:
@@ -257,6 +258,7 @@ class ImageVectorGenerator:
     elif named_color and color.alpha < 255:
       # Use named color with alpha: SolidColor(Color.White.copy(alpha = 0.5f))
       from ..utils.formatting import format_alpha
+
       alpha_value = color.alpha / 255.0
       return f"SolidColor(Color.{named_color}.copy(alpha = {format_alpha(alpha_value)}))"
     else:
@@ -267,20 +269,20 @@ class ImageVectorGenerator:
     """Generate clipPathData list of PathNode elements."""
     if not clip_path_nodes:
       return "emptyList()"
-    
+
     # For short clip paths, use single line format
     if len(clip_path_nodes) <= 3:
       path_dsl = path_data_to_dsl(clip_path_nodes)
       # Convert DSL to PathNode list format
       return self._convert_dsl_to_path_node_list(path_dsl)
-    
+
     # For longer clip paths, use multiline format
     indent = "  " * indent_level
     lines = ["listOf("]
-    
+
     path_dsl = path_data_to_dsl(clip_path_nodes)
-    dsl_lines = path_dsl.split('\n')
-    
+    dsl_lines = path_dsl.split("\n")
+
     for i, line in enumerate(dsl_lines):
       line = line.strip()
       if line:
@@ -290,25 +292,25 @@ class ImageVectorGenerator:
           lines.append(f"{indent}  {path_node_call},")
         else:
           lines.append(f"{indent}  {path_node_call}")
-    
+
     lines.append(f"{indent})")
     return "\n".join(lines)
 
   def _convert_dsl_to_path_node_list(self, dsl: str) -> str:
     """Convert path DSL to single-line PathNode list."""
-    dsl_lines = [line.strip() for line in dsl.split('\n') if line.strip()]
+    dsl_lines = [line.strip() for line in dsl.split("\n") if line.strip()]
     path_nodes = []
-    
+
     for line in dsl_lines:
       path_node = self._convert_dsl_line_to_path_node(line)
       path_nodes.append(path_node)
-    
+
     return f"listOf({', '.join(path_nodes)})"
 
   def _convert_dsl_line_to_path_node(self, dsl_line: str) -> str:
     """Convert a single DSL line to PathNode call."""
     dsl_line = dsl_line.strip()
-    
+
     # Handle different DSL commands
     if dsl_line.startswith("moveTo("):
       return dsl_line.replace("moveTo(", "PathNode.MoveTo(")

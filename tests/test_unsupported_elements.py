@@ -1,8 +1,9 @@
 """Tests for unsupported SVG element warnings."""
 
-from src.parser.svg_parser import SvgParser
 import io
 from contextlib import redirect_stdout
+
+from src.parser.svg_parser import SvgParser
 
 
 class TestUnsupportedElementWarnings:
@@ -14,18 +15,18 @@ class TestUnsupportedElementWarnings:
       <text x="10" y="20">Hello World</text>
       <rect x="0" y="0" width="50" height="25"/>
     </svg>"""
-    
+
     parser = SvgParser()
-    
+
     # Capture stdout to check warnings
     output = io.StringIO()
     with redirect_stdout(output):
       ir = parser.parse_svg(svg_content)
-    
+
     warning_output = output.getvalue()
     assert "Text element '<text>' is not supported" in warning_output
     assert "⚠️  SVG Conversion Warnings:" in warning_output
-    
+
     # Should still parse the rect element
     assert len(ir.nodes) == 1
 
@@ -39,16 +40,16 @@ class TestUnsupportedElementWarnings:
       </defs>
       <line x1="0" y1="0" x2="50" y2="50" marker-end="url(#arrowhead)"/>
     </svg>"""
-    
+
     parser = SvgParser()
-    
+
     output = io.StringIO()
     with redirect_stdout(output):
       ir = parser.parse_svg(svg_content)
-    
+
     warning_output = output.getvalue()
     assert "Advanced SVG element '<marker>' is not supported" in warning_output
-    
+
     # Should still parse the line element
     assert len(ir.nodes) == 1
 
@@ -62,18 +63,20 @@ class TestUnsupportedElementWarnings:
       </defs>
       <circle cx="25" cy="25" r="20" filter="url(#blur)"/>
     </svg>"""
-    
+
     parser = SvgParser()
-    
+
     output = io.StringIO()
     with redirect_stdout(output):
       parser.parse_svg(svg_content)
-    
+
     warning_output = output.getvalue()
     assert "Filter element '<filter>' is not supported" in warning_output
     # feGaussianBlur is nested inside filter, so it should also be detected
-    assert ("Filter element '<feGaussianBlur>' is not supported" in warning_output or 
-            "Filter element '<filter>' is not supported" in warning_output)
+    assert (
+      "Filter element '<feGaussianBlur>' is not supported" in warning_output
+      or "Filter element '<filter>' is not supported" in warning_output
+    )
 
   def test_animation_element_warning(self):
     """Test warning for animation elements."""
@@ -82,13 +85,13 @@ class TestUnsupportedElementWarnings:
         <animate attributeName="x" from="0" to="100" dur="2s"/>
       </rect>
     </svg>"""
-    
+
     parser = SvgParser()
-    
+
     output = io.StringIO()
     with redirect_stdout(output):
       parser.parse_svg(svg_content)
-    
+
     warning_output = output.getvalue()
     assert "Animation element '<animate>' is not supported" in warning_output
 
@@ -108,24 +111,26 @@ class TestUnsupportedElementWarnings:
       <circle cx="25" cy="50" r="15"/>
       <image href="image.png" x="0" y="0"/>
     </svg>"""
-    
+
     parser = SvgParser()
-    
+
     output = io.StringIO()
     with redirect_stdout(output):
       ir = parser.parse_svg(svg_content)
-    
+
     warning_output = output.getvalue()
-    
+
     # Should contain multiple warnings
     assert "Text element '<text>' is not supported" in warning_output
     assert "Filter element '<filter>' is not supported" in warning_output
     # feGaussianBlur should be detected when filter is processed
-    assert ("Filter element '<feGaussianBlur>' is not supported" in warning_output or
-            "Filter element '<filter>' is not supported" in warning_output)
+    assert (
+      "Filter element '<feGaussianBlur>' is not supported" in warning_output
+      or "Filter element '<filter>' is not supported" in warning_output
+    )
     assert "Advanced SVG element '<marker>' is not supported" in warning_output
     assert "Embedded content element '<image>' is not supported" in warning_output
-    
+
     # Should still parse supported elements (rect and circle)
     assert len(ir.nodes) == 2
 
@@ -139,15 +144,15 @@ class TestUnsupportedElementWarnings:
         <ellipse cx="20" cy="20" rx="15" ry="10"/>
       </g>
     </svg>"""
-    
+
     parser = SvgParser()
-    
+
     output = io.StringIO()
     with redirect_stdout(output):
       ir = parser.parse_svg(svg_content)
-    
+
     warning_output = output.getvalue()
-    
+
     # Should not contain any warnings
     assert "⚠️  SVG Conversion Warnings:" not in warning_output
     assert len(ir.nodes) == 4  # rect, circle, path, group (with ellipse inside)
@@ -163,18 +168,20 @@ class TestUnsupportedElementWarnings:
       </defs>
       <textPath href="#textcurve">Text on path</textPath>
     </svg>"""
-    
+
     parser = SvgParser()
-    
+
     output = io.StringIO()
     with redirect_stdout(output):
       parser.parse_svg(svg_content)
-    
+
     warning_output = output.getvalue()
     assert "Text element '<text>' is not supported" in warning_output
     # tspan is nested inside text element, so it should be detected
-    assert ("Text element '<tspan>' is not supported" in warning_output or
-            "Text element '<text>' is not supported" in warning_output) 
+    assert (
+      "Text element '<tspan>' is not supported" in warning_output
+      or "Text element '<text>' is not supported" in warning_output
+    )
     assert "Text element '<textPath>' is not supported" in warning_output
 
   def test_use_and_symbol_warnings(self):
@@ -188,16 +195,16 @@ class TestUnsupportedElementWarnings:
       <use href="#star" x="0" y="0"/>
       <rect x="50" y="0" width="25" height="25"/>
     </svg>"""
-    
+
     parser = SvgParser()
-    
+
     output = io.StringIO()
     with redirect_stdout(output):
       ir = parser.parse_svg(svg_content)
-    
+
     warning_output = output.getvalue()
     assert "Advanced SVG element '<symbol>' is not supported" in warning_output
     assert "Advanced SVG element '<use>' is not supported" in warning_output
-    
+
     # Should still parse the rect element
     assert len(ir.nodes) == 1

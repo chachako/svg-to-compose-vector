@@ -1,0 +1,16 @@
+{{- imports }}
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+
+@Composable
+fun {{ name.name_part_pascal }}(
+  size: Dp = 24.dp,
+  tint: Color = Color.Unspecified,
+  contentDescription: String? = "{{ name.name_part | replace("_", " ") | title }}"
+): ImageVector {
+  return remember(size, tint) {
+    {{ build_code | indent(4, first=False) }}
+  }
+} 

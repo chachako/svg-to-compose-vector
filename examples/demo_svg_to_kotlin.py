@@ -9,8 +9,8 @@ from pathlib import Path
 # Add src to path and import modules
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from src.parser.svg_parser import SvgParser  # noqa: E402
-from src.generator.image_vector_generator import ImageVectorGenerator  # noqa: E402
+from src.generator.image_vector_generator import ImageVectorGenerator
+from src.parser.svg_parser import SvgParser
 
 
 def demo_star_icon():
@@ -19,7 +19,7 @@ def demo_star_icon():
 
   # Material Design inspired star SVG
   star_svg = """<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2 L15.09 8.26 L22 9 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9 L8.91 8.26 Z" 
+      <path d="M12 2 L15.09 8.26 L22 9 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9 L8.91 8.26 Z"
             fill="#FFC107" id="star"/>
   </svg>"""
 

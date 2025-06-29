@@ -1,23 +1,22 @@
 import re
 from dataclasses import dataclass
-from typing import Optional, List
 from pathlib import Path
 
 
 @dataclass
 class NameComponents:
   """Parsed name components providing flexible access to naming parts."""
-  
+
   raw_name: str
   file_stem: str
-  categories: List[str]
+  categories: list[str]
   name: str
 
   @property
   def namespace_part(self) -> str:
     """Content before the last dot.
-    
-    Example: 'navigation.home' -> 'Navigation'
+
+    Example: 'navigation.home' -> 'navigation'
     Example: 'button' -> '' (empty)
     """
     return ".".join(self.categories[:-1]) if len(self.categories) > 1 else ""
@@ -25,25 +24,25 @@ class NameComponents:
   @property
   def name_part(self) -> str:
     """Content after the last dot.
-    
-    Example: 'navigation.home' -> 'Home'
-    Example: 'button' -> 'Button'
+
+    Example: 'navigation.home' -> 'home'
+    Example: 'button' -> 'button'
     """
     return self.name
 
   @property
   def full_path(self) -> str:
     """Complete path with all components.
-    
-    Example: 'navigation.home' -> 'Navigation.Home'
-    Example: 'button' -> 'Button'
+
+    Example: 'navigation.home' -> 'navigation.home'
+    Example: 'button' -> 'button'
     """
     return ".".join(self.categories)
 
   @property
   def namespace_part_pascal(self) -> str:
     """Namespace in PascalCase format.
-    
+
     Example: 'navigation.settings' -> 'Navigation'
     Example: 'icon_button' -> '' (empty for single component)
     """
@@ -52,7 +51,7 @@ class NameComponents:
   @property
   def namespace_part_camel(self) -> str:
     """Namespace in camelCase format.
-    
+
     Example: 'navigation.settings' -> 'navigation'
     Example: 'icon_button' -> '' (empty for single component)
     """
@@ -61,7 +60,7 @@ class NameComponents:
   @property
   def name_part_pascal(self) -> str:
     """Name in PascalCase format.
-    
+
     Example: 'navigation.home_icon' -> 'HomeIcon'
     Example: 'close-button' -> 'CloseButton'
     """
@@ -70,7 +69,7 @@ class NameComponents:
   @property
   def name_part_camel(self) -> str:
     """Name in camelCase format.
-    
+
     Example: 'navigation.home_icon' -> 'homeIcon'
     Example: 'close-button' -> 'closeButton'
     """
@@ -79,7 +78,7 @@ class NameComponents:
   @property
   def full_path_pascal(self) -> str:
     """Full path in PascalCase.
-    
+
     Example: 'ui.button' -> 'Ui.Button'
     Example: 'system.dialog.modal' -> 'System.Dialog.Modal'
     """
@@ -88,16 +87,16 @@ class NameComponents:
   @property
   def full_path_camel(self) -> str:
     """Full path in camelCase format.
-    
-    Example: 'ui.buttons.primary' -> 'ui.buttons.primary'
+
+    Example: 'ui.button_primary' -> 'ui.buttonPrimary'
     Example: 'arrow_left' -> 'arrowLeft'
     """
     return self._to_camel_case(self.full_path)
 
   @property
-  def namespace_path_components(self) -> List[str]:
+  def namespace_path_components(self) -> list[str]:
     """Namespace path components for creating nested directories.
-    
+
     Example: 'ui.button' -> ['Ui']
     Example: 'system.dialog.modal' -> ['System', 'Dialog']
     Example: 'icon' -> [] (empty)
@@ -107,9 +106,9 @@ class NameComponents:
     return []
 
   @property
-  def namespace_path_components_lowercase(self) -> List[str]:
+  def namespace_path_components_lowercase(self) -> list[str]:
     """Namespace path components in lowercase for directory creation.
-    
+
     Example: 'ui.button' -> ['ui']
     Example: 'system.dialog.modal' -> ['system', 'dialog']
     Example: 'icon' -> [] (empty)
@@ -121,7 +120,7 @@ class NameComponents:
   @property
   def namespace_nested_path(self) -> Path:
     """Namespace as nested Path object for directory creation.
-    
+
     Example: 'ui.button' -> Path('Ui')
     Example: 'system.dialog.modal' -> Path('System/Dialog')
     Example: 'icon' -> Path('.') (current dir)
@@ -133,7 +132,7 @@ class NameComponents:
   @property
   def namespace_nested_path_lowercase(self) -> Path:
     """Namespace as nested Path object with lowercase directories.
-    
+
     Example: 'ui.button' -> Path('ui')
     Example: 'system.dialog.modal' -> Path('system/dialog')
     Example: 'icon' -> Path('.') (current dir)
@@ -166,17 +165,17 @@ class NameComponents:
     """Convert single word to PascalCase."""
     if not word:
       return ""
-    
+
     # Split by word boundaries (underscores, hyphens, spaces, and camelCase boundaries)
     # This regex splits on non-alphanumeric characters and camelCase boundaries
-    parts = re.split(r'[^a-zA-Z0-9]+|(?<=[a-z])(?=[A-Z])', word)
-    
+    parts = re.split(r"[^a-zA-Z0-9]+|(?<=[a-z])(?=[A-Z])", word)
+
     # Filter out empty parts and capitalize each part
     result_parts = []
     for part in parts:
       if part:  # Only process non-empty parts
         result_parts.append(part.capitalize())
-    
+
     return "".join(result_parts)
 
   def _lowercase_word(self, word: str) -> str:
@@ -195,13 +194,13 @@ class NameResolver:
   def __init__(self, separator: str = "."):
     self.separator = separator
 
-  def resolve_name(self, file_path: Path, user_name: Optional[str] = None) -> NameComponents:
+  def resolve_name(self, file_path: Path, user_name: str | None = None) -> NameComponents:
     """Parse name components from file path or user-specified name.
-    
+
     Examples:
-      'navigation.home.svg' -> NameComponents with namespace='Navigation', name='Home'
-      'arrow-left.svg' -> NameComponents with namespace='', name='ArrowLeft'
-      user_name='ui.buttons.primary' -> NameComponents with namespace='Ui.Buttons', name='Primary'
+      'navigation.home.svg' -> NameComponents with namespace='navigation', name='home'
+      'arrow-left.svg' -> NameComponents with namespace='', name='arrow_left'
+      user_name='ui.buttons.primary' -> NameComponents with namespace='ui.buttons', name='primary'
     """
     if user_name:
       return self._parse_name(user_name)
@@ -225,7 +224,7 @@ class NameResolver:
       raw_name=name,
       file_stem=name,
       categories=categories,
-      name=categories[-1] if categories else "UnnamedIcon"
+      name=categories[-1] if categories else "UnnamedIcon",
     )
 
   def _clean_identifier(self, text: str) -> str:
@@ -239,11 +238,11 @@ class NameResolver:
 
   def resolve_name_from_string(self, name: str) -> NameComponents:
     """Parse name components directly from a string.
-    
+
     This is a convenience method that doesn't require a file path.
-    
+
     Examples:
-      'navigation.home' -> NameComponents with namespace='Navigation', name='Home'
-      'arrow_left' -> NameComponents with namespace='', name='ArrowLeft'
+      'navigation.home' -> NameComponents with namespace='navigation', name='home'
+      'arrow_left' -> NameComponents with namespace='', name='arrow_left'
     """
-    return self._parse_name(name) 
+    return self._parse_name(name)

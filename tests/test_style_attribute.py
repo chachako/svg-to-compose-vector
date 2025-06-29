@@ -1,5 +1,5 @@
-from src.parser.svg_parser import SvgParser
 from src.generator.image_vector_generator import ImageVectorGenerator
+from src.parser.svg_parser import SvgParser
 
 
 class TestStyleAttribute:
@@ -23,8 +23,8 @@ class TestStyleAttribute:
     """Test that style attribute overrides direct attributes."""
     svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 0 0 L 10 10" 
-            fill="green" 
+      <path d="M 0 0 L 10 10"
+            fill="green"
             stroke="yellow"
             style="fill: red; stroke: blue;"/>
     </svg>"""
@@ -67,7 +67,7 @@ class TestStyleAttribute:
     """Test opacity values in style."""
     svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 0 0 L 10 10" 
+      <path d="M 0 0 L 10 10"
             style="fill: red; fill-opacity: 0.5; stroke: blue; stroke-opacity: 0.8;"/>
     </svg>"""
 
@@ -82,7 +82,7 @@ class TestStyleAttribute:
     """Test stroke properties in style."""
     svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 0 0 L 10 10" 
+      <path d="M 0 0 L 10 10"
             style="stroke: red; stroke-width: 3; stroke-linecap: round; stroke-linejoin: bevel;"/>
     </svg>"""
 
@@ -99,7 +99,7 @@ class TestStyleAttribute:
     """Test combination of style and individual attributes."""
     svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 0 0 L 10 10" 
+      <path d="M 0 0 L 10 10"
             stroke-width="2"
             fill-opacity="0.3"
             style="fill: green; stroke: red;"/>
@@ -134,7 +134,7 @@ class TestStyleAttribute:
     """Test graceful handling of malformed style attributes."""
     svg_content = """<?xml version="1.0" encoding="UTF-8"?>
     <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 0 0 L 10 10" 
+      <path d="M 0 0 L 10 10"
             fill="blue"
             style="fill red; stroke: invalidcolor; valid-prop: value;"/>
     </svg>"""
@@ -153,7 +153,7 @@ def test_style_attribute_integration():
   """Integration test with CSS style attributes."""
   svg_content = """<?xml version="1.0" encoding="UTF-8"?>
   <svg width="100" height="50" viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg">
-    <path d="M 10 10 L 40 10 L 40 30 L 10 30 Z" 
+    <path d="M 10 10 L 40 10 L 40 30 L 10 30 Z"
           style="fill: rgba(255, 0, 0, 0.8); stroke: hsl(240, 100%, 50%); stroke-width: 2;"/>
   </svg>"""
 

@@ -1,21 +1,59 @@
 from .color import IrColor
-from .path_node import (
-  IrPathNode, IrClose, IrMoveTo, IrLineTo, IrHorizontalTo, IrVerticalTo,
-  IrCurveTo, IrReflectiveCurveTo, IrQuadTo, IrReflectiveQuadTo, IrArcTo,
-  IrRelativeMoveTo, IrRelativeLineTo, IrRelativeHorizontalTo, IrRelativeVerticalTo,
-  IrRelativeCurveTo, IrRelativeReflectiveCurveTo, IrRelativeQuadTo, IrRelativeReflectiveQuadTo, IrRelativeArcTo
-)
-from .vector_node import IrVectorNode, IrVectorPath, IrVectorGroup
+from .gradient import IrColorFill, IrColorStop, IrFill, IrLinearGradient, IrRadialGradient
 from .image_vector import IrImageVector
-from .gradient import IrFill, IrColorFill, IrLinearGradient, IrRadialGradient, IrColorStop
+from .path_node import (
+  IrArcTo,
+  IrClose,
+  IrCurveTo,
+  IrHorizontalTo,
+  IrLineTo,
+  IrMoveTo,
+  IrPathNode,
+  IrQuadTo,
+  IrReflectiveCurveTo,
+  IrReflectiveQuadTo,
+  IrRelativeArcTo,
+  IrRelativeCurveTo,
+  IrRelativeHorizontalTo,
+  IrRelativeLineTo,
+  IrRelativeMoveTo,
+  IrRelativeQuadTo,
+  IrRelativeReflectiveCurveTo,
+  IrRelativeReflectiveQuadTo,
+  IrRelativeVerticalTo,
+  IrVerticalTo,
+)
+from .vector_node import IrVectorGroup, IrVectorNode, IrVectorPath
 
 __all__ = [
+  "IrArcTo",
+  "IrClose",
   "IrColor",
-  "IrPathNode", "IrClose", "IrMoveTo", "IrLineTo", "IrHorizontalTo", "IrVerticalTo",
-  "IrCurveTo", "IrReflectiveCurveTo", "IrQuadTo", "IrReflectiveQuadTo", "IrArcTo",
-  "IrRelativeMoveTo", "IrRelativeLineTo", "IrRelativeHorizontalTo", "IrRelativeVerticalTo",
-  "IrRelativeCurveTo", "IrRelativeReflectiveCurveTo", "IrRelativeQuadTo", "IrRelativeReflectiveQuadTo", "IrRelativeArcTo",
-  "IrVectorNode", "IrVectorPath", "IrVectorGroup",
+  "IrColorFill",
+  "IrColorStop",
+  "IrCurveTo",
+  "IrFill",
+  "IrHorizontalTo",
   "IrImageVector",
-  "IrFill", "IrColorFill", "IrLinearGradient", "IrRadialGradient", "IrColorStop"
+  "IrLineTo",
+  "IrLinearGradient",
+  "IrMoveTo",
+  "IrPathNode",
+  "IrQuadTo",
+  "IrRadialGradient",
+  "IrReflectiveCurveTo",
+  "IrReflectiveQuadTo",
+  "IrRelativeArcTo",
+  "IrRelativeCurveTo",
+  "IrRelativeHorizontalTo",
+  "IrRelativeLineTo",
+  "IrRelativeMoveTo",
+  "IrRelativeQuadTo",
+  "IrRelativeReflectiveCurveTo",
+  "IrRelativeReflectiveQuadTo",
+  "IrRelativeVerticalTo",
+  "IrVectorGroup",
+  "IrVectorNode",
+  "IrVectorPath",
+  "IrVerticalTo",
 ]

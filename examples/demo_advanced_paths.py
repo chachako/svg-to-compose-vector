@@ -6,8 +6,8 @@ from pathlib import Path
 # Add src to path and import modules
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from src.parser.svg_parser import SvgParser  # noqa: E402
-from src.generator.image_vector_generator import ImageVectorGenerator  # noqa: E402
+from src.generator.image_vector_generator import ImageVectorGenerator
+from src.parser.svg_parser import SvgParser
 
 
 def demo_advanced_paths():
@@ -19,12 +19,12 @@ def demo_advanced_paths():
   # SVG with advanced path commands
   svg_content = """
   <svg width="200" height="200" viewBox="0 0 200 200">
-    <path d="M 50 50 
+    <path d="M 50 50
              Q 100 25 150 50
              T 150 100
              S 125 150 100 150
              A 25 25 0 0 1 50 125
-             Z" 
+             Z"
           fill="#4285F4"/>
   </svg>
   """
@@ -38,8 +38,8 @@ def demo_advanced_paths():
 
   print("📊 Parsed IR Structure:")
   print(f"   • Vector: {ir.name}")
-  print(f"   • Dimensions: {ir.default_width}×{ir.default_height} dp")
-  print(f"   • Viewport: {ir.viewport_width}×{ir.viewport_height}")
+  print(f"   • Dimensions: {ir.default_width}x{ir.default_height} dp")
+  print(f"   • Viewport: {ir.viewport_width}x{ir.viewport_height}")
   print(f"   • Paths: {len(ir.nodes)}")
 
   if ir.nodes:

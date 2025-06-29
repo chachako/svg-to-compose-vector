@@ -1,13 +1,44 @@
 [project]
 name = "svg-to-compose-vector"
 version = "0.1.0"
-description = "Convert SVG files to Compose ImageVector code"
+description = "Convert SVG files to Kotlin Compose ImageVector code with high fidelity and production-ready output"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Your Name", email = "your.email@example.com" }]
+maintainers = [{ name = "Your Name", email = "your.email@example.com" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+]
+keywords = [
+    "svg",
+    "compose",
+    "imageVector",
+    "kotlin",
+    "android",
+    "graphics",
+    "vector",
+    "conversion",
+]
 requires-python = ">=3.13"
 dependencies = ["jinja2>=3.1.0", "click>=8.0.0"]
 
 [dependency-groups]
-test = ["pytest>=7.0.0"]
-dev = ["ruff"]
+dev = ["pytest>=7.0.0", "ruff>=0.1.0", "build>=1.2.2.post1", "twine>=6.1.0"]
+
+[project.urls]
+Homepage = "https://github.com/chachako/svg-to-compose-vector"
+Repository = "https://github.com/chachako/svg-to-compose-vector"
+Issues = "https://github.com/chachako/svg-to-compose-vector/issues"
+Documentation = "https://github.com/chachako/svg-to-compose-vector#readme"
 
 [project.scripts]
 svg2compose = "src.cli:cli"
@@ -19,6 +50,25 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
+[tool.hatch.build.targets.sdist]
+include = ["src/", "README.md", "LICENSE", "pyproject.toml"]
+
 [tool.ruff]
 line-length = 100
 indent-width = 2
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "RUF"]
+ignore = ["E501"]                               # Line too long (handled by formatter)
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

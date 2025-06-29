@@ -1,6 +1,5 @@
-from dataclasses import dataclass
-from typing import Union
 import re
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -82,16 +81,17 @@ class IrColor:
       elif named and self.alpha < 255:
         # Use named color with alpha: Color.Red.copy(alpha = 0.5f)
         from ..utils.formatting import format_alpha
+
         alpha_value = self.alpha / 255.0
         return f"Color.{named}.copy(alpha = {format_alpha(alpha_value)})"
-    
+
     # Fallback to hex notation with ARGB format: Color(0xAARRGGBB)
     return f"Color(0x{self.argb:08X})"
 
   def to_compose_solid_color(self, use_named_colors: bool = True) -> str:
     """Generate Compose SolidColor constructor call for use as Brush."""
     from ..utils.formatting import format_alpha
-    
+
     # For use as fill/stroke in path()
     if use_named_colors:
       named = self.to_compose_color_name()
@@ -102,7 +102,7 @@ class IrColor:
         # Use named color with alpha like Color.Red.copy(alpha = 0.5f)
         alpha_value = self.alpha / 255.0
         return f"SolidColor(Color.{named}.copy(alpha = {format_alpha(alpha_value)}))"
-    
+
     # Fallback to hex notation
     return f"SolidColor({self.to_compose_color(use_named_colors=use_named_colors)})"
 
@@ -112,12 +112,12 @@ class IrColor:
     for name, color in COMPOSE_BUILTIN_COLORS.items():
       if self.argb == color.argb:
         return name.capitalize()
-    
+
     # Check for RGB matches (ignoring alpha) for transparent versions
     for name, color in COMPOSE_BUILTIN_COLORS.items():
       if (self.red, self.green, self.blue) == (color.red, color.green, color.blue):
         return name.capitalize()
-    
+
     return None
 
   def is_transparent(self) -> bool:
@@ -135,7 +135,7 @@ _svg_color_cache: dict[str, IrColor] = {}
 # Only these colors are available as named constants in Compose
 COMPOSE_BUILTIN_COLORS = {
   "black": IrColor.from_rgb(0, 0, 0),
-  "darkgray": IrColor.from_rgb(68, 68, 68),  
+  "darkgray": IrColor.from_rgb(68, 68, 68),
   "gray": IrColor.from_rgb(136, 136, 136),
   "lightgray": IrColor.from_rgb(204, 204, 204),
   "white": IrColor.from_rgb(255, 255, 255),
@@ -153,7 +153,7 @@ def _get_svg_color(color_name: str) -> IrColor | None:
   """Get SVG color by name with lazy loading and caching."""
   if color_name not in _svg_color_cache:
     from .svg_colors import SVG_COLOR_HEX_MAP
-    
+
     if color_name in SVG_COLOR_HEX_MAP:
       hex_value = SVG_COLOR_HEX_MAP[color_name]
       if hex_value.startswith("#") and len(hex_value) == 9:
@@ -164,11 +164,11 @@ def _get_svg_color(color_name: str) -> IrColor | None:
         _svg_color_cache[color_name] = IrColor.from_hex(hex_value)
     else:
       return None
-  
+
   return _svg_color_cache.get(color_name)
 
 
-def parse_color(color_string: str) -> Union[IrColor, None]:
+def parse_color(color_string: str) -> IrColor | None:
   """Parse color from various string formats."""
   color_string = color_string.strip().lower()
 

@@ -1,6 +1,6 @@
-from src.parser.svg_parser import SvgParser
 from src.generator.image_vector_generator import ImageVectorGenerator
 from src.ir.vector_node import IrVectorGroup
+from src.parser.svg_parser import SvgParser
 
 
 class TestClipPath:
@@ -12,7 +12,7 @@ class TestClipPath:
 
   def test_basic_clippath_parsing(self):
     """Test basic clipPath element with rectangle."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="myClip">
@@ -23,11 +23,11 @@ class TestClipPath:
         <circle cx="50" cy="50" r="40" fill="red"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     result = self.parser.parse_svg(svg_content)
     assert len(result.nodes) == 1
-    
+
     group = result.nodes[0]
     assert isinstance(group, IrVectorGroup)
     assert len(group.clip_path_data) > 0
@@ -35,7 +35,7 @@ class TestClipPath:
 
   def test_clippath_with_multiple_shapes(self):
     """Test clipPath containing multiple shapes."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="complexClip">
@@ -47,18 +47,18 @@ class TestClipPath:
         <rect x="0" y="0" width="100" height="100" fill="blue"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     result = self.parser.parse_svg(svg_content)
     group = result.nodes[0]
-    
+
     assert isinstance(group, IrVectorGroup)
     # Should have path data from both rect and circle
     assert len(group.clip_path_data) > 5
 
   def test_clippath_with_path_element(self):
     """Test clipPath containing path element."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="pathClip">
@@ -69,17 +69,17 @@ class TestClipPath:
         <rect x="0" y="0" width="100" height="100" fill="green"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     result = self.parser.parse_svg(svg_content)
     group = result.nodes[0]
-    
+
     assert isinstance(group, IrVectorGroup)
     assert len(group.clip_path_data) == 4  # MoveTo, LineTo, LineTo, Close
 
   def test_nested_groups_with_clippath(self):
     """Test nested groups where parent has clipPath."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="outerClip">
@@ -92,36 +92,36 @@ class TestClipPath:
         </g>
       </g>
     </svg>
-    '''
-    
+    """
+
     result = self.parser.parse_svg(svg_content)
     outer_group = result.nodes[0]
-    
+
     assert isinstance(outer_group, IrVectorGroup)
     assert len(outer_group.clip_path_data) > 0
     assert len(outer_group.children) == 1
-    
+
     inner_group = outer_group.children[0]
     assert isinstance(inner_group, IrVectorGroup)
     assert inner_group.rotation == 45.0
 
   def test_missing_clippath_reference(self):
     """Test group with clip-path reference to non-existent clipPath."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <g clip-path="url(#nonExistent)">
         <circle cx="50" cy="50" r="40" fill="red"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     result = self.parser.parse_svg(svg_content)
     # Should parse without error, but no clip path data
     assert len(result.nodes) == 1
 
   def test_clippath_code_generation(self):
     """Test Kotlin code generation for clipPath."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="testClip">
@@ -132,11 +132,11 @@ class TestClipPath:
         <circle cx="50" cy="50" r="40" fill="red"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     ir = self.parser.parse_svg(svg_content)
     code = self.generator.generate(ir)
-    
+
     # Verify clipPathData is included in generated code
     assert "clipPathData = listOf(" in code
     assert "PathNode.MoveTo(10f, 10f)" in code
@@ -145,7 +145,7 @@ class TestClipPath:
 
   def test_clippath_with_transforms(self):
     """Test clipPath combined with group transforms."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="transformClip">
@@ -156,11 +156,11 @@ class TestClipPath:
         <rect x="0" y="0" width="25" height="25" fill="purple"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     result = self.parser.parse_svg(svg_content)
     group = result.nodes[0]
-    
+
     assert isinstance(group, IrVectorGroup)
     assert len(group.clip_path_data) > 0
     assert group.translation_x == 25.0
@@ -170,7 +170,7 @@ class TestClipPath:
 
   def test_clippath_import_generation(self):
     """Test that clipPath usage generates correct imports."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="importTest">
@@ -181,17 +181,17 @@ class TestClipPath:
         <rect x="0" y="0" width="100" height="100" fill="black"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     ir = self.parser.parse_svg(svg_content)
     code, imports = self.generator.generate_core_code(ir)
-    
+
     # Verify PathNode import is included
     assert "androidx.compose.ui.graphics.vector.PathNode" in imports
 
   def test_empty_clippath(self):
     """Test empty clipPath element."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="emptyClip">
@@ -201,18 +201,18 @@ class TestClipPath:
         <rect x="0" y="0" width="100" height="100" fill="yellow"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     result = self.parser.parse_svg(svg_content)
     group = result.nodes[0]
-    
+
     assert isinstance(group, IrVectorGroup)
     # Empty clipPath should result in empty clip_path_data
     assert len(group.clip_path_data) == 0
 
   def test_clippath_with_ellipse(self):
     """Test clipPath containing ellipse element."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="ellipseClip">
@@ -223,11 +223,11 @@ class TestClipPath:
         <rect x="0" y="0" width="100" height="100" fill="cyan"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     result = self.parser.parse_svg(svg_content)
     group = result.nodes[0]
-    
+
     assert isinstance(group, IrVectorGroup)
     assert len(group.clip_path_data) > 0
     # Ellipse should be converted to arc commands
@@ -236,7 +236,7 @@ class TestClipPath:
 
   def test_clippath_flattening_behavior(self):
     """Test that groups are not flattened when they have clipPath."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="noFlattenClip">
@@ -247,10 +247,10 @@ class TestClipPath:
         <path d="M0,0 L100,100" stroke="black"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     result = self.parser.parse_svg(svg_content)
-    
+
     # Should create a group even with single child due to clipPath
     assert len(result.nodes) == 1
     assert isinstance(result.nodes[0], IrVectorGroup)
@@ -258,7 +258,7 @@ class TestClipPath:
 
   def test_clippath_complete_output_simple_rect(self):
     """Test complete Kotlin output for simple rect clipPath (multiline format)."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="rectClip">
@@ -269,12 +269,12 @@ class TestClipPath:
         <circle cx="50" cy="50" r="30" fill="blue"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     ir = self.parser.parse_svg(svg_content)
     code = self.generator.generate(ir)
-    
-    expected_output = '''ImageVector.Builder(
+
+    expected_output = """ImageVector.Builder(
   name = "UnnamedIcon",
   defaultWidth = 24f.dp,
   defaultHeight = 24f.dp,
@@ -302,13 +302,13 @@ class TestClipPath:
       close()
     }
   }
-}.build()'''
-    
+}.build()"""
+
     assert code.strip() == expected_output.strip()
 
   def test_clippath_complete_output_single_line_format(self):
     """Test complete Kotlin output for simple clipPath (single line format)."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="simpleClip">
@@ -319,12 +319,12 @@ class TestClipPath:
         <rect x="0" y="0" width="100" height="100" fill="red"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     ir = self.parser.parse_svg(svg_content)
     code = self.generator.generate(ir)
-    
-    expected_output = '''ImageVector.Builder(
+
+    expected_output = """ImageVector.Builder(
   name = "UnnamedIcon",
   defaultWidth = 24f.dp,
   defaultHeight = 24f.dp,
@@ -345,13 +345,13 @@ class TestClipPath:
       close()
     }
   }
-}.build()'''
-    
+}.build()"""
+
     assert code.strip() == expected_output.strip()
 
   def test_clippath_complete_output_multiline_format(self):
     """Test complete Kotlin output for complex clipPath with multiline format."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 200 200">
       <defs>
         <clipPath id="complexClip">
@@ -362,40 +362,40 @@ class TestClipPath:
         <rect x="0" y="0" width="200" height="200" fill="red"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     ir = self.parser.parse_svg(svg_content)
     code = self.generator.generate(ir)
-    
+
     # Verify multiline clipPath format for complex paths
     assert "clipPathData = listOf(" in code
     assert "  PathNode.MoveTo(10f, 10f)," in code
     assert "  PathNode.LineTo(190f, 10f)," in code
     assert "  PathNode.QuadTo(" in code  # Q commands become PathNode.QuadTo in clipPath
     assert "  PathNode.Close" in code
-    
+
     # Verify the listOf block is properly structured with correct opening and closing
     assert "clipPathData = listOf(" in code
     assert "    )," in code  # Verify the listOf is properly closed with correct indentation
-    
+
     # Verify the complete structure by checking the sequence
     clippath_start = code.find("clipPathData = listOf(")
     clippath_end = code.find("    ),", clippath_start)
     assert clippath_end > clippath_start, "clipPathData listOf block is not properly closed"
-    
+
     # Extract the clipPath section and verify it contains all expected elements
     clippath_section = code[clippath_start:clippath_end]
     assert "PathNode.MoveTo" in clippath_section
     assert "PathNode.LineTo" in clippath_section
     assert "PathNode.QuadTo" in clippath_section
     assert "PathNode.Close" in clippath_section
-    
+
     # Verify rotation is preserved
     assert "rotate = 45f," in code
 
   def test_clippath_complete_output_with_transforms(self):
     """Test complete Kotlin output for clipPath with transform parameters."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="transformClip">
@@ -406,11 +406,11 @@ class TestClipPath:
         <rect x="0" y="0" width="100" height="100" fill="green"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     ir = self.parser.parse_svg(svg_content)
     code = self.generator.generate(ir)
-    
+
     expected_patterns = [
       "group(",
       'name = "group",',
@@ -426,13 +426,13 @@ class TestClipPath:
       "path(",
       "fill = SolidColor(Color(0xFF008000)),",  # Green is stored as hex, not named color
     ]
-    
+
     for pattern in expected_patterns:
       assert pattern in code, f"Missing pattern: {pattern}"
 
   def test_clippath_complete_output_empty_clippath(self):
     """Test complete Kotlin output for empty clipPath reference."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="emptyClip">
@@ -442,12 +442,12 @@ class TestClipPath:
         <rect x="10" y="10" width="80" height="80" fill="orange"/>
       </g>
     </svg>
-    '''
-    
+    """
+
     ir = self.parser.parse_svg(svg_content)
     code = self.generator.generate(ir)
-    
-    expected_output = '''ImageVector.Builder(
+
+    expected_output = """ImageVector.Builder(
   name = "UnnamedIcon",
   defaultWidth = 24f.dp,
   defaultHeight = 24f.dp,
@@ -467,13 +467,13 @@ class TestClipPath:
       close()
     }
   }
-}.build()'''
-    
+}.build()"""
+
     assert code.strip() == expected_output.strip()
 
   def test_clippath_complete_output_nested_groups(self):
     """Test complete Kotlin output for nested groups with clipPath."""
-    svg_content = '''
+    svg_content = """
     <svg viewBox="0 0 100 100">
       <defs>
         <clipPath id="outerClip">
@@ -486,31 +486,31 @@ class TestClipPath:
         </g>
       </g>
     </svg>
-    '''
-    
+    """
+
     ir = self.parser.parse_svg(svg_content)
     code = self.generator.generate(ir)
-    
+
     # Verify outer group with clipPath
     assert 'name = "group",' in code
     assert "clipPathData = listOf(" in code
     assert "PathNode.MoveTo(10f, 10f)" in code
-    
+
     # Verify inner group with rotation
     assert 'name = "innerGroup",' in code
     assert "rotate = 30f," in code
-    
+
     # Verify proper nesting structure
-    lines = code.split('\n')
+    lines = code.split("\n")
     group_indent_found = False
     inner_group_indent_found = False
-    
+
     for line in lines:
       if 'name = "group",' in line:
         group_indent_found = True
-        assert line.startswith('  ')  # First level indent
+        assert line.startswith("  ")  # First level indent
       if 'name = "innerGroup",' in line:
         inner_group_indent_found = True
-        assert line.startswith('    ')  # Second level indent
-    
+        assert line.startswith("    ")  # Second level indent
+
     assert group_indent_found and inner_group_indent_found

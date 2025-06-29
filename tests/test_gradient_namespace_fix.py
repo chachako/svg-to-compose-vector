@@ -1,8 +1,8 @@
 """Test gradient parsing with namespace support."""
 
-from src.parser.svg_parser import SvgParser
 from src.generator.image_vector_generator import ImageVectorGenerator
 from src.ir.gradient import IrLinearGradient, IrRadialGradient
+from src.parser.svg_parser import SvgParser
 
 
 class TestGradientNamespaceFix:
@@ -21,33 +21,33 @@ class TestGradientNamespaceFix:
   </defs>
   <path d="M0 0h24v24H0z" fill="url(#testGrad)"/>
 </svg>"""
-    
+
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path_node = ir.nodes[0]
-    
+
     # Verify the fill is a gradient
     assert path_node.fill is not None
     assert isinstance(path_node.fill, IrLinearGradient)
-    
+
     # Verify gradient properties
     gradient = path_node.fill
     assert gradient.start_x == 0.0
     assert gradient.start_y == 0.0
     assert gradient.end_x == 100.0
     assert gradient.end_y == 0.0
-    
+
     # Verify color stops are parsed correctly
     assert len(gradient.color_stops) == 3
-    
+
     # Check first stop (red)
     stop0 = gradient.color_stops[0]
     assert stop0.offset == 0.0
     assert stop0.color.argb == 0xFFFF0000  # Red
     assert stop0.opacity == 1.0
-    
+
     # Check second stop (green with opacity)
     stop1 = gradient.color_stops[1]
     assert stop1.offset == 0.5
@@ -55,7 +55,7 @@ class TestGradientNamespaceFix:
     # Color should have opacity applied
     expected_alpha = int(255 * 0.8)  # 204
     assert (stop1.color.argb >> 24) & 0xFF == expected_alpha
-    
+
     # Check third stop (blue)
     stop2 = gradient.color_stops[2]
     assert stop2.offset == 1.0
@@ -74,44 +74,45 @@ class TestGradientNamespaceFix:
   </defs>
   <path d="M10 10h80v80h-80z" fill="url(#radialGrad)"/>
 </svg>"""
-    
+
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path_node = ir.nodes[0]
-    
+
     # Verify the fill is a radial gradient
     assert path_node.fill is not None
     assert isinstance(path_node.fill, IrRadialGradient)
-    
+
     # Note: Also check gradient storage in context
     # For now, let's check that gradients are being parsed and stored correctly
     # by checking the context instead
-    
+
     # Create fresh parsing to check gradient storage
     import xml.etree.ElementTree as ET
+
     from src.parser.svg_parser import ParseContext
-    
+
     root = ET.fromstring(svg_content)
     parser = SvgParser()
     context = ParseContext()
-    
+
     # Parse the defs section
     for child in root:
-      if child.tag.endswith('defs'):
+      if child.tag.endswith("defs"):
         parser._parse_defs_element(child, context)
-    
+
     # Verify gradient was stored
     assert "radialGrad" in context.gradients
     gradient = context.gradients["radialGrad"]
     assert isinstance(gradient, IrRadialGradient)
-    
+
     # Verify radial gradient properties
     assert gradient.center_x == 50.0  # 50% of 100
     assert gradient.center_y == 50.0  # 50% of 100
-    assert gradient.radius == 50.0    # 50% of min(100, 100)
-    
+    assert gradient.radius == 50.0  # 50% of min(100, 100)
+
     # Verify color stops
     assert len(gradient.color_stops) == 2
     assert gradient.color_stops[0].color.argb == 0xFFFFFFFF  # White
@@ -129,16 +130,16 @@ class TestGradientNamespaceFix:
   </defs>
   <path d="M0 0h24v24H0z" fill="url(#simpleGrad)"/>
 </svg>"""
-    
+
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path_node = ir.nodes[0]
-    
+
     assert path_node.fill is not None
     assert isinstance(path_node.fill, IrLinearGradient)
-    
+
     gradient = path_node.fill
     assert len(gradient.color_stops) == 2
     assert gradient.color_stops[0].color.argb == 0xFFFF0000  # Red
@@ -158,23 +159,23 @@ class TestGradientNamespaceFix:
   </defs>
   <path d="M0 0h24v24H0z" fill="url(#multiGrad)"/>
 </svg>"""
-    
+
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     generator = ImageVectorGenerator()
     code = generator.generate(ir)
-    
+
     # Should generate multi-line colorStops array for readability
     assert "colorStops = arrayOf(" in code
     assert "0f to Color(0xFFFF6B35)" in code
     assert "0.33f to Color(0xFFF7931E)" in code
     assert "0.66f to Color(0xFFFFCC02)" in code
     assert "1f to Color(0xFF42A5F5)" in code
-    
+
     # Check that it uses multi-line format for 3+ stops
-    lines = code.split('\n')
-    color_stop_lines = [line for line in lines if 'to Color(' in line]
+    lines = code.split("\n")
+    color_stop_lines = [line for line in lines if "to Color(" in line]
     assert len(color_stop_lines) >= 4, "Should have separate lines for each color stop"
 
   def test_gradient_with_style_attributes_namespace(self):
@@ -189,33 +190,34 @@ class TestGradientNamespaceFix:
   </defs>
   <rect width="24" height="24" fill="url(#styledGrad)"/>
 </svg>"""
-    
+
     parser = SvgParser()
     parser.parse_svg(svg_content)
-    
+
     # The rect element won't be parsed as a path, but the gradient should be stored
     import xml.etree.ElementTree as ET
+
     from src.parser.svg_parser import ParseContext
-    
+
     root = ET.fromstring(svg_content)
     context = ParseContext()
-    
+
     # Parse defs
     for child in root:
-      if child.tag.endswith('defs'):
+      if child.tag.endswith("defs"):
         parser._parse_defs_element(child, context)
-    
+
     assert "styledGrad" in context.gradients
     gradient = context.gradients["styledGrad"]
     assert len(gradient.color_stops) == 2
-    
+
     # First stop: red with 50% opacity
     stop0 = gradient.color_stops[0]
     assert stop0.opacity == 0.5
     # Should have opacity applied to alpha channel
     expected_alpha = int(255 * 0.5)  # 127
     assert (stop0.color.argb >> 24) & 0xFF == expected_alpha
-    
+
     # Second stop: blue with full opacity
     stop1 = gradient.color_stops[1]
     assert stop1.opacity == 1.0

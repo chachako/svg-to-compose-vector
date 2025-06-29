@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import List, Optional
-from .vector_node import IrVectorNode
+
 from .color import IrColor
+from .vector_node import IrVectorNode
 
 
 @dataclass
@@ -13,9 +13,9 @@ class IrImageVector:
   default_height: float
   viewport_width: float
   viewport_height: float
-  nodes: List[IrVectorNode]
+  nodes: list[IrVectorNode]
   auto_mirror: bool = False
-  tint_color: Optional[IrColor] = None
+  tint_color: IrColor | None = None
 
   def __post_init__(self):
     if self.viewport_width <= 0 or self.viewport_height <= 0:

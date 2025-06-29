@@ -1,9 +1,9 @@
 """Tests for SVG shape element parsing (rect, circle, ellipse, line, polygon, polyline)."""
 
-from src.parser.svg_parser import SvgParser
-from src.ir.vector_node import IrVectorPath
-from src.ir.path_node import IrMoveTo, IrLineTo, IrClose, IrArcTo
 from src.ir.gradient import IrColorFill
+from src.ir.path_node import IrArcTo, IrClose, IrLineTo, IrMoveTo
+from src.ir.vector_node import IrVectorPath
+from src.parser.svg_parser import SvgParser
 
 
 class TestRectElement:
@@ -14,12 +14,12 @@ class TestRectElement:
     svg_content = """<svg><rect x="10" y="20" width="30" height="40"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     assert isinstance(ir.nodes[0], IrVectorPath)
     path = ir.nodes[0]
     assert path.name == "rect"
-    
+
     # Should generate: M10,20 L40,20 L40,60 L10,60 Z
     assert len(path.paths) == 5
     assert isinstance(path.paths[0], IrMoveTo)
@@ -31,10 +31,10 @@ class TestRectElement:
     svg_content = """<svg><rect x="0" y="0" width="100" height="50" rx="10" ry="5"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
-    
+
     # Should contain arc commands for rounded corners
     arc_nodes = [node for node in path.paths if isinstance(node, IrArcTo)]
     assert len(arc_nodes) == 4  # Four corners
@@ -44,7 +44,7 @@ class TestRectElement:
     svg_content = """<svg><rect x="0" y="0" width="50" height="50" fill="red" stroke="blue" stroke-width="2"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     path = ir.nodes[0]
     assert isinstance(path.fill, IrColorFill)
     assert path.fill.color.argb == 0xFFFF0000  # Red
@@ -57,7 +57,7 @@ class TestRectElement:
     svg_content = """<svg><rect x="10" y="20" width="0" height="40"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     # Should return empty nodes for invalid rectangle
     assert len(ir.nodes) == 0
 
@@ -70,11 +70,11 @@ class TestCircleElement:
     svg_content = """<svg><circle cx="50" cy="50" r="25"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
     assert path.name == "circle"
-    
+
     # Circle should be generated with 4 arc commands
     arc_nodes = [node for node in path.paths if isinstance(node, IrArcTo)]
     assert len(arc_nodes) == 4
@@ -84,7 +84,7 @@ class TestCircleElement:
     svg_content = """<svg><circle cx="0" cy="0" r="10" fill="green"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     path = ir.nodes[0]
     assert isinstance(path.fill, IrColorFill)
     assert path.fill.color.argb == 0xFF008000  # SVG green
@@ -94,7 +94,7 @@ class TestCircleElement:
     svg_content = """<svg><circle cx="50" cy="50" r="0"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 0
 
 
@@ -106,11 +106,11 @@ class TestEllipseElement:
     svg_content = """<svg><ellipse cx="50" cy="30" rx="40" ry="20"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
     assert path.name == "ellipse"
-    
+
     # Ellipse should be generated with 4 arc commands
     arc_nodes = [node for node in path.paths if isinstance(node, IrArcTo)]
     assert len(arc_nodes) == 4
@@ -120,7 +120,7 @@ class TestEllipseElement:
     svg_content = """<svg><ellipse cx="50" cy="30" rx="0" ry="20"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 0
 
 
@@ -132,11 +132,11 @@ class TestLineElement:
     svg_content = """<svg><line x1="10" y1="20" x2="30" y2="40"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
     assert path.name == "line"
-    
+
     # Line should generate: M10,20 L30,40
     assert len(path.paths) == 2
     assert isinstance(path.paths[0], IrMoveTo)
@@ -146,10 +146,12 @@ class TestLineElement:
 
   def test_line_with_stroke(self):
     """Test line with stroke properties."""
-    svg_content = """<svg><line x1="0" y1="0" x2="100" y2="0" stroke="red" stroke-width="5"/></svg>"""
+    svg_content = (
+      """<svg><line x1="0" y1="0" x2="100" y2="0" stroke="red" stroke-width="5"/></svg>"""
+    )
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     path = ir.nodes[0]
     assert isinstance(path.stroke, IrColorFill)
     assert path.stroke.color.argb == 0xFFFF0000  # Red
@@ -164,11 +166,11 @@ class TestPolygonElement:
     svg_content = """<svg><polygon points="10,10 50,10 30,40"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
     assert path.name == "polygon"
-    
+
     # Polygon should generate: M10,10 L50,10 L30,40 Z
     assert len(path.paths) == 4
     assert isinstance(path.paths[0], IrMoveTo)
@@ -179,7 +181,7 @@ class TestPolygonElement:
     svg_content = """<svg><polygon points="0,0, 10,0, 5,10"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
     assert len(path.paths) == 4  # M + 2L + Z
@@ -189,7 +191,7 @@ class TestPolygonElement:
     svg_content = """<svg><polygon points="0 0,10,0 5 10"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
     assert len(path.paths) == 4
@@ -199,7 +201,7 @@ class TestPolygonElement:
     svg_content = """<svg><polygon points="10,10 50,10"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     # Polygon needs at least 3 points
     assert len(ir.nodes) == 0
 
@@ -208,7 +210,7 @@ class TestPolygonElement:
     svg_content = """<svg><polygon points=""/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 0
 
 
@@ -220,11 +222,11 @@ class TestPolylineElement:
     svg_content = """<svg><polyline points="10,10 20,20 30,10"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
     assert path.name == "polyline"
-    
+
     # Polyline should generate: M10,10 L20,20 L30,10 (no Z)
     assert len(path.paths) == 3
     assert isinstance(path.paths[0], IrMoveTo)
@@ -236,18 +238,18 @@ class TestPolylineElement:
     """Test difference between polyline and polygon (open vs closed)."""
     polyline_svg = """<svg><polyline points="0,0 10,0 5,10"/></svg>"""
     polygon_svg = """<svg><polygon points="0,0 10,0 5,10"/></svg>"""
-    
+
     parser = SvgParser()
     polyline_ir = parser.parse_svg(polyline_svg)
     polygon_ir = parser.parse_svg(polygon_svg)
-    
+
     polyline_path = polyline_ir.nodes[0]
     polygon_path = polygon_ir.nodes[0]
-    
+
     # Polyline should NOT have close command
     close_in_polyline = any(isinstance(node, IrClose) for node in polyline_path.paths)
     assert not close_in_polyline
-    
+
     # Polygon should have close command
     close_in_polygon = any(isinstance(node, IrClose) for node in polygon_path.paths)
     assert close_in_polygon
@@ -257,7 +259,7 @@ class TestPolylineElement:
     svg_content = """<svg><polyline points="10,10"/></svg>"""
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     # Polyline needs at least 2 points
     assert len(ir.nodes) == 0
 
@@ -277,10 +279,11 @@ class TestShapeIntegration:
     """
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     # Should have one group containing two shapes
     assert len(ir.nodes) == 1
     from src.ir.vector_node import IrVectorGroup
+
     assert isinstance(ir.nodes[0], IrVectorGroup)
     group = ir.nodes[0]
     assert len(group.children) == 2
@@ -296,7 +299,7 @@ class TestShapeIntegration:
     """
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 3
     # All should be IrVectorPath (shapes converted to paths)
     for node in ir.nodes:
@@ -317,8 +320,9 @@ class TestShapeIntegration:
     """
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
-    
+
     assert len(ir.nodes) == 1
     path = ir.nodes[0]
     from src.ir.gradient import IrLinearGradient
+
     assert isinstance(path.fill, IrLinearGradient)
