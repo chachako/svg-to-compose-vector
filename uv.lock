@@ -487,7 +487,7 @@ wheels = [
 
 [[package]]
 name = "svg-to-compose-vector"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "." }
 dependencies = [
     { name = "click" },

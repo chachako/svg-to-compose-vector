@@ -138,8 +138,8 @@ class TestSvgParser:
     ir = parser.parse_svg(no_fill_svg)
 
     assert len(ir.nodes) == 1
-    # Should default to black when no fill specified
-    assert ir.nodes[0].fill.to_compose_color() == "Color.Black"
+    # Should not have fill when no fill attribute specified (stroke-only path)
+    assert ir.nodes[0].fill is None
 
   def test_invalid_svg_content(self):
     """Test error handling for invalid SVG content."""

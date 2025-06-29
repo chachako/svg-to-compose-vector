@@ -325,9 +325,9 @@ class SvgParser:
         # Gradient not found, fallback to black
         return IrColorFill(color=IrColor(argb=0xFF000000))
 
-    # Default to black when no fill attribute specified (SVG spec default)
+    # Return None when no fill attribute specified (let the element be stroke-only)
     if not fill_str:
-      fill_str = "black"
+      return None
 
     # Use the comprehensive color parser
     try:

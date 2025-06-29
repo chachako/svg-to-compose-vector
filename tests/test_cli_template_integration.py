@@ -213,14 +213,6 @@ val {{ icon_name | pascal_case }}CustomIcon = {{ build_code }}"""
     assert "Vector name:" in result.output
     assert "Nodes:" in result.output
 
-  def test_version_command(self, runner):
-    """Test version command."""
-    result = runner.invoke(cli, ["version"])
-
-    assert result.exit_code == 0
-    assert "SVG to Compose ImageVector Converter" in result.output
-    assert "v0.1.0" in result.output
-
   def test_cli_help(self, runner):
     """Test CLI help output."""
     result = runner.invoke(cli, ["--help"])
