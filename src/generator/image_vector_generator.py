@@ -132,6 +132,9 @@ class ImageVectorGenerator:
     lines = []
     indent = "  " * self.indent_level
 
+    # Add import for group DSL function
+    self.imports.add("androidx.compose.ui.graphics.vector.group")
+
     # Check if any parameters differ from defaults (including name)
     # Compose group() without parameters is cleaner when no parameters are needed
     has_name = group.name and group.name.strip()
