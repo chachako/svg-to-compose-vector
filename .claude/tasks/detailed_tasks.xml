@@ -445,12 +445,112 @@
         </task>
     </phase>
     
+    <phase id="07_multicolor_support" name="Multi-Color Icon Template Support">
+        <task id="07_01" priority="high">
+            <name>Color Detection and Extraction</name>
+            <description>Implement color analysis for multi-color SVG detection</description>
+            <implementation>
+                <class name="ColorAnalyzer">
+                    <method name="extract_used_colors">
+                        <input>ir: IrImageVector</input>
+                        <output>Set[str] (hex color strings)</output>
+                        <logic>
+                            1. Recursively traverse all IrVectorNode elements
+                            2. Extract colors from fill and stroke attributes
+                            3. Extract colors from gradients (all color stops)
+                            4. Return unique set of hex color strings
+                        </logic>
+                    </method>
+                    <method name="is_multicolor">
+                        <input>used_colors: Set[str]</input>
+                        <output>bool</output>
+                        <logic>Return len(used_colors) > 1</logic>
+                    </method>
+                </class>
+            </implementation>
+        </task>
+        
+        <task id="07_02" priority="high">
+            <name>Multi-Color Template Engine Enhancement</name>
+            <description>Extend template engine to support color mapping variables</description>
+            <implementation>
+                <enhancement target="TemplateEngine">
+                    <new_variables>
+                        <var name="used_colors">Set of hex colors used in the SVG</var>
+                        <var name="build_code_with_color_params">Generated code with color parameters instead of hex values</var>
+                    </new_variables>
+                    <method name="render_with_multicolor_support">
+                        <logic>
+                            1. Detect if SVG is multi-color
+                            2. If multi-color and multicolor_template provided, use multicolor template
+                            3. Generate build_code_with_color_params by replacing hex colors with parameter references
+                            4. Provide used_colors set to template for inline mapping access
+                        </logic>
+                    </method>
+                </enhancement>
+            </implementation>
+        </task>
+        
+        <task id="07_03" priority="high">
+            <name>CLI Multi-Color Template Support</name>
+            <description>Add --multicolor-template CLI option for batch and convert commands</description>
+            <implementation>
+                <cli_enhancement>
+                    <new_option name="multicolor_template">
+                        <short>-mt</short>
+                        <long>--multicolor-template</long>
+                        <help>Template file path for multi-color SVGs (user-defined only, no built-in templates)</help>
+                        <type>str</type>
+                    </new_option>
+                    <logic>
+                        - If multicolor_template provided and SVG has multiple colors, use multicolor template
+                        - Otherwise use regular template
+                        - Apply to both convert and batch commands
+                    </logic>
+                </cli_enhancement>
+            </implementation>
+        </task>
+        
+        <task id="07_04" priority="critical">
+            <name>Color Parameter Substitution</name>
+            <description>Replace color hex values with parameter references in generated code</description>
+            <implementation>
+                <class name="ColorParameterSubstitution">
+                    <method name="substitute_colors">
+                        <input>code: str, color_mappings: Dict[str, Dict]</input>
+                        <output>str (code with substituted parameters)</output>
+                        <logic>
+                            1. Parse color_mappings from template context (inline Jinja2 variables)
+                            2. For each color hex in mappings, find Color(0xFFxxxxxx) patterns
+                            3. Replace with corresponding semantic_name parameter
+                            4. Also handle SolidColor(Color(0xFFxxxxxx)) patterns
+                            5. Return modified code string
+                        </logic>
+                        <example>
+                            # Before: fill = SolidColor(Color(0xFF2196F3))
+                            # After:  fill = SolidColor(primaryColor)
+                        </example>
+                    </method>
+                </class>
+                <regex_patterns>
+                    <pattern name="color_pattern">Color\(0x[A-F0-9]{8}\)</pattern>
+                    <pattern name="solid_color_pattern">SolidColor\(Color\(0x[A-F0-9]{8}\)\)</pattern>
+                </regex_patterns>
+            </implementation>
+        </task>
+        
+    </phase>
+
     <implementation_notes>
-        <note>Start with Phase 02 (IR) as it defines the data structures for everything else</note>
-        <note>Phase 03 (Parsing) can be implemented incrementally by SVG feature</note>
-        <note>Phase 04 (Generation) depends on completed IR and should start with simple cases</note>
-        <note>Each parser should handle errors gracefully and provide meaningful error messages</note>
-        <note>All coordinate and mathematical operations should preserve precision</note>
-        <note>Template system should be flexible enough for various output formats</note>
+        <note>All core functionality (Phases 01-06) are complete with 238 passing tests</note>
+        <note>Current focus: Multi-color icon template support for flexible color parameterization</note>
+        <note>Phase 07: User-defined multicolor templates only - no built-in templates provided</note>
+        <note>Multicolor system maintains complete backward compatibility</note>
+        <note>Template selection logic: colors > 1 + multicolor template provided = use multicolor template</note>
+        <note>Color parameter substitution uses regex to replace Color(0xFFxxxxxx) with semantic names</note>
+        <note>Hierarchical naming and batch conversion systems are production-ready</note>
+        <note>Template system is flexible and extensible for multi-color support</note>
+        <note>All coordinate and mathematical operations preserve precision</note>
+        <note>Error handling is comprehensive with graceful degradation</note>
     </implementation_notes>
 </detailed_tasks>

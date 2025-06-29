@@ -760,6 +760,232 @@
         </test_categories>
     </testing_strategy_examples>
     
+    <multicolor_template_system_examples>
+        <file name="core/color_extractor.py">
+            <code>
+                from typing import Set, Union
+                from ..ir.image_vector import IrImageVector
+                from ..ir.vector_node import IrVectorPath, IrVectorGroup
+                from ..ir.color import IrColor
+                from ..ir.gradient import IrColorFill, IrLinearGradient, IrRadialGradient
+                
+                class ColorExtractor:
+                    """Extract used colors from IrImageVector for multicolor template system"""
+                    
+                    def extract_colors(self, ir: IrImageVector) -> Set[str]:
+                        """Extract all unique hex colors used in the SVG"""
+                        colors = set()
+                        for node in ir.nodes:
+                            self._extract_from_node(node, colors)
+                        return colors
+                    
+                    def _extract_from_node(self, node, colors: Set[str]):
+                        """Recursively extract colors from vector node"""
+                        if isinstance(node, IrVectorPath):
+                            # Extract from fill
+                            if node.fill:
+                                self._extract_from_fill(node.fill, colors)
+                            
+                            # Extract from stroke
+                            if node.stroke:
+                                self._extract_from_fill(node.stroke, colors)
+                        
+                        elif isinstance(node, IrVectorGroup):
+                            # Recursively process child nodes
+                            for child in node.nodes:
+                                self._extract_from_node(child, colors)
+                    
+                    def _extract_from_fill(self, fill, colors: Set[str]):
+                        """Extract colors from fill/stroke objects"""
+                        if isinstance(fill, IrColorFill):
+                            colors.add(fill.color.to_hex())
+                        elif isinstance(fill, (IrLinearGradient, IrRadialGradient)):
+                            for color_stop in fill.color_stops:
+                                colors.add(color_stop.color.to_hex())
+                    
+                    def is_multicolor(self, colors: Set[str]) -> bool:
+                        """Check if SVG has multiple colors"""
+                        return len(colors) > 1
+            </code>
+        </file>
+        
+        <file name="generator/multicolor_generator.py">
+            <code>
+                import re
+                from typing import Dict, Any, Set
+                from ..core.color_extractor import ColorExtractor
+                
+                class MulticolorGenerator:
+                    """Enhanced generator with multicolor template support"""
+                    
+                    def __init__(self):
+                        self.color_extractor = ColorExtractor()
+                    
+                    def generate_with_multicolor_support(self, ir: IrImageVector, template_context: Dict) -> Dict[str, Any]:
+                        """Generate template context with multicolor support"""
+                        
+                        # Extract colors from IR
+                        used_colors = self.color_extractor.extract_colors(ir)
+                        is_multicolor = self.color_extractor.is_multicolor(used_colors)
+                        
+                        # Add multicolor variables to template context
+                        template_context.update({
+                            'used_colors': used_colors,
+                            'is_multicolor': is_multicolor,
+                            'build_code_with_color_params': None  # Will be set by template engine
+                        })
+                        
+                        return template_context
+                    
+                    def substitute_color_parameters(self, code: str, color_mappings: Dict[str, Dict]) -> str:
+                        """Replace Color(0xFFxxxxxx) with parameter references"""
+                        
+                        for color_hex, mapping in color_mappings.items():
+                            semantic_name = mapping['semantic_name']
+                            
+                            # Convert hex to ARGB format for matching
+                            if color_hex.startswith('#'):
+                                hex_clean = color_hex[1:]
+                                if len(hex_clean) == 6:
+                                    hex_clean = 'FF' + hex_clean  # Add alpha
+                                argb_hex = hex_clean.upper()
+                                
+                                # Replace patterns like Color(0xFF2196F3) with primaryColor
+                                pattern = f'Color\\(0x{argb_hex}\\)'
+                                code = re.sub(pattern, semantic_name, code)
+                                
+                                # Also replace SolidColor patterns
+                                pattern = f'SolidColor\\(Color\\(0x{argb_hex}\\)\\)'
+                                code = re.sub(pattern, f'SolidColor({semantic_name})', code)
+                        
+                        return code
+            </code>
+        </file>
+        
+        <file name="cli_multicolor_enhancement.py">
+            <code>
+                @click.option('--multicolor-template', '-mt', type=str,
+                             help='Template for multicolor SVGs (when multiple colors detected)')
+                def convert(input_file, output, template, multicolor_template, ...):
+                    """Enhanced convert command with multicolor template support"""
+                    
+                    # Load configuration
+                    cfg = Config()
+                    if multicolor_template:
+                        cfg.multicolor_template_path = Path(multicolor_template)
+                    
+                    # Process SVG file
+                    processor = SvgProcessor(cfg)
+                    
+                    # Extract colors to determine template choice
+                    ir = processor.parse_svg(input_file)
+                    color_extractor = ColorExtractor()
+                    used_colors = color_extractor.extract_colors(ir)
+                    
+                    # Select appropriate template
+                    if len(used_colors) > 1 and cfg.multicolor_template_path:
+                        selected_template = cfg.multicolor_template_path
+                        use_multicolor = True
+                    else:
+                        selected_template = cfg.template_path
+                        use_multicolor = False
+                    
+                    # Generate code with appropriate template
+                    result = processor.generate_code(ir, selected_template, use_multicolor)
+                    
+                    # Output result
+                    if output:
+                        output.write_text(result)
+                        click.echo(f"Generated {'multicolor' if use_multicolor else 'single-color'} code: {output}")
+                    else:
+                        click.echo(result)
+            </code>
+        </file>
+        
+        <usage_examples>
+            <example name="multicolor_cli_usage">
+                <command>
+# Convert single SVG with multicolor template
+uv run svg-to-compose convert icon.svg \
+    --template default.j2 \
+    --multicolor-template material_multicolor.j2
+
+# Batch convert with automatic multicolor detection
+uv run svg-to-compose batch icons/ \
+    --template simple.j2 \
+    --multicolor-template custom_multicolor.j2 \
+    --output-dir generated/
+                </command>
+                <expected_output>
+@Composable
+fun MyIcon(
+    primaryColor: Color = MaterialTheme.colorScheme.primary,
+    accentColor: Color = Color(0xFFFF9800)
+): ImageVector = ImageVector.Builder(
+    name = "MyIcon",
+    defaultWidth = 24.0.dp,
+    defaultHeight = 24.0.dp,
+    viewportWidth = 24.0f,
+    viewportHeight = 24.0f
+).apply {
+    path(fill = SolidColor(primaryColor)) {
+        moveTo(2.0f, 2.0f)
+        lineTo(22.0f, 2.0f)
+        // ...
+    }
+    path(fill = SolidColor(accentColor)) {
+        moveTo(5.0f, 5.0f)
+        // ...
+    }
+}.build()
+                </expected_output>
+            </example>
+        </usage_examples>
+        
+        <user_template_examples>
+            <note>No built-in multicolor templates - users create custom templates</note>
+            <template name="material_theme_example.j2">
+                <description>User-created Material Design style template</description>
+                <template_code>
+{# User-defined multicolor template with inline color mapping #}
+{%- set color_mappings = {
+    "#2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary"},
+    "#FF9800": {"semantic_name": "secondaryColor", "default_value": "MaterialTheme.colorScheme.secondary"},
+    "#4CAF50": {"semantic_name": "tertiaryColor", "default_value": "MaterialTheme.colorScheme.tertiary"}
+} -%}
+
+{{- imports }}
+
+@Composable
+fun {{ name | pascal_case }}(
+{%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
+    {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+{%- endfor %}
+): ImageVector = {{ build_code_with_color_params }}
+                </template_code>
+            </template>
+            <template name="custom_colors_example.j2">
+                <description>User-created custom brand colors template</description>
+                <template_code>
+{# Custom brand colors multicolor template #}
+{%- set color_mappings = {
+    "#2196F3": {"semantic_name": "brandPrimary", "default_value": "Color(0xFF2196F3)"},
+    "#FF9800": {"semantic_name": "brandAccent", "default_value": "Color(0xFFFF9800)"}
+} -%}
+
+{{- imports }}
+
+@Composable
+fun {{ name | pascal_case }}(
+{%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
+    {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+{%- endfor %}
+): ImageVector = {{ build_code_with_color_params }}
+                </template_code>
+            </template>
+        </user_template_examples>
+    </multicolor_template_system_examples>
+    
     <validation_rules>
         <svg_validation>
             <rule>SVG must have valid XML structure</rule>
@@ -783,5 +1009,13 @@
             <rule>Parameter values must be within Compose API constraints</rule>
             <rule>Generated ImageVector must be renderable without errors</rule>
         </kotlin_validation>
+        
+        <multicolor_validation>
+            <rule>Color extraction must find all unique colors in SVG</rule>
+            <rule>Color parameter substitution must be complete and accurate</rule>
+            <rule>Generated @Composable function must have valid Kotlin syntax</rule>
+            <rule>Template color mappings must cover all detected colors</rule>
+            <rule>Backward compatibility: single-color SVGs work unchanged</rule>
+        </multicolor_validation>
     </validation_rules>
 </implementation_details>
