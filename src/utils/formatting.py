@@ -34,13 +34,13 @@ def format_alpha(alpha_value: float) -> str:
 
 
 def format_dp(value: float) -> str:
-  """Format dimension value for dp units with float suffix (e.g., 24f, 2.5f)."""
+  """Format dimension value for dp units (e.g., 24, 2.5f)."""
   # Round to 5 decimal places maximum for dp values
   rounded = round(value, 5)
 
-  # Check if it's effectively a whole number
+  # Check if it's effectively a whole number - use just the integer
   if rounded == int(rounded):
-    return f"{int(rounded)}f"
+    return f"{int(rounded)}"
 
   # Format with 5 decimal places max, then remove trailing zeros
   formatted = f"{rounded:.5f}"

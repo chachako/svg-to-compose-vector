@@ -6,8 +6,8 @@ import androidx.compose.ui.unit.dp
 // Custom icon: Testicon
 val TesticonIcon = ImageVector.Builder(
   name = "test_icon",
-  defaultWidth = 24f.dp,
-  defaultHeight = 24f.dp,
+  defaultWidth = 24.dp,
+  defaultHeight = 24.dp,
   viewportWidth = 24f,
   viewportHeight = 24f,
 ).apply {

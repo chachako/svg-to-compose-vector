@@ -110,7 +110,7 @@ class ImageVectorGenerator:
       if path.stroke_line_miter != 4.0:
         lines.append(f"{indent}  strokeLineMiter = {format_float(path.stroke_line_miter)},")
 
-      if path.path_fill_type != "nonZero":
+      if path.path_fill_type.lower() != "nonzero":
         fill_type_value = self._get_path_fill_type_value(path.path_fill_type)
         lines.append(f"{indent}  pathFillType = {fill_type_value},")
 
@@ -223,12 +223,15 @@ class ImageVectorGenerator:
 
   def _get_path_fill_type_value(self, fill_type: str) -> str:
     """Convert path fill type to Compose enum value."""
-    fill_type_map = {"nonZero": "PathFillType.NonZero", "evenOdd": "PathFillType.EvenOdd"}
+    # Use case-insensitive comparison
+    fill_type_lower = fill_type.lower()
 
-    if fill_type in fill_type_map:
+    if fill_type_lower == "evenodd":
       self.imports.add("androidx.compose.ui.graphics.PathFillType")
-      return fill_type_map[fill_type]
-    return "PathFillType.NonZero"
+      return "PathFillType.EvenOdd"
+    else:  # Default to NonZero for any other value
+      self.imports.add("androidx.compose.ui.graphics.PathFillType")
+      return "PathFillType.NonZero"
 
   def get_required_imports(self) -> list[str]:
     """Get list of required imports for generated code."""

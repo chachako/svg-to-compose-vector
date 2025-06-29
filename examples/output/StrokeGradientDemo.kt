@@ -9,8 +9,8 @@ import androidx.compose.ui.unit.dp
 
 ImageVector.Builder(
   name = "stroke_gradient_test",
-  defaultWidth = 200f.dp,
-  defaultHeight = 200f.dp,
+  defaultWidth = 200.dp,
+  defaultHeight = 200.dp,
   viewportWidth = 200f,
   viewportHeight = 200f,
 ).apply {

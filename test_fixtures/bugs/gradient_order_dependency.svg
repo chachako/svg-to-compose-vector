@@ -1,0 +1,13 @@
+<!-- Bug test: Gradient parsing when <defs> appears after path elements -->
+<svg width="80" height="50" viewBox="0 0 80 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Path referencing gradient that is defined later -->
+  <rect x="10" y="10" width="60" height="30" fill="url(#testGradient)"/>
+  
+  <!-- Gradient definition comes AFTER the path that uses it -->
+  <defs>
+    <linearGradient id="testGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF6B35"/>
+      <stop offset="100%" stop-color="#F7931E"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -5,7 +5,8 @@
       "Bash(uv run:*)",
       "Bash(rg:*)",
       "Bash(find:*)",
-      "Bash(ruff check:*)"
+      "Bash(ruff check:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

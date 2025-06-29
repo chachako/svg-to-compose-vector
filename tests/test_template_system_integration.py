@@ -64,8 +64,8 @@ class TestTemplateSystemIntegration:
     assert "import androidx.compose.ui.unit.dp" in result
     assert "ImageVector.Builder(" in result
     assert 'name = "UnnamedIcon"' in result
-    assert "defaultWidth = 24f.dp" in result
-    assert "defaultHeight = 24f.dp" in result
+    assert "defaultWidth = 24.dp" in result
+    assert "defaultHeight = 24.dp" in result
     assert "viewportWidth = 24f" in result
     assert "viewportHeight = 24f" in result
     assert "path(" in result

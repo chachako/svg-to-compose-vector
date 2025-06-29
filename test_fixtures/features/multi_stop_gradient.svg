@@ -1,0 +1,13 @@
+<!-- Multi-stop gradient test -->
+<svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="rainbow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF0000"/>
+      <stop offset="25%" stop-color="#FFFF00"/>
+      <stop offset="50%" stop-color="#00FF00"/>
+      <stop offset="75%" stop-color="#0000FF"/>
+      <stop offset="100%" stop-color="#8B00FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="10" y="10" width="100" height="60" fill="url(#rainbow)" stroke="#000"/>
+</svg>

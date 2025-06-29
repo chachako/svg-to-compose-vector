@@ -1,6 +1,6 @@
 [project]
 name = "svg-to-compose-vector"
-version = "0.1.4"
+version = "0.1.5"
 description = "Convert SVG files to Kotlin Compose ImageVector code with high fidelity and production-ready output"
 readme = "README.md"
 license = { text = "MIT" }

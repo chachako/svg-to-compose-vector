@@ -1,7 +1,7 @@
 ImageVector.Builder(
   name = "UnnamedIcon",
-  defaultWidth = 120f.dp,
-  defaultHeight = 120f.dp,
+  defaultWidth = 120.dp,
+  defaultHeight = 120.dp,
   viewportWidth = 120f,
   viewportHeight = 120f,
 ).apply {

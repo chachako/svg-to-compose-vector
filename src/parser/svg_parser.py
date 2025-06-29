@@ -64,11 +64,19 @@ class SvgParser:
     width, height = self._parse_dimensions(svg_element)
     viewport_width, viewport_height = self._parse_viewport(svg_element, width, height)
 
-    # Parse child elements
+    # Parse child elements - first pass: parse all defs elements to populate context
+    for child in svg_element:
+      tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+      if tag == "defs":
+        self._parse_element(child, context)
+
+    # Second pass: parse all other elements
     nodes = []
     for child in svg_element:
-      child_nodes = self._parse_element(child, context)
-      nodes.extend(child_nodes)
+      tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+      if tag != "defs":  # Skip defs as they were already processed
+        child_nodes = self._parse_element(child, context)
+        nodes.extend(child_nodes)
 
     # Print warnings if any unsupported elements were encountered
     if context.warnings:
@@ -246,6 +254,7 @@ class SvgParser:
     fill_opacity = self._parse_fill_opacity(path_element)
     stroke_linecap = self._parse_stroke_linecap(path_element)
     stroke_linejoin = self._parse_stroke_linejoin(path_element)
+    fill_rule = self._parse_fill_rule(path_element)
     name = path_element.get("id", "path")
 
     vector_path = IrVectorPath(
@@ -258,6 +267,7 @@ class SvgParser:
       fill_alpha=fill_opacity,
       stroke_line_cap=stroke_linecap,
       stroke_line_join=stroke_linejoin,
+      path_fill_type=fill_rule,
     )
 
     return [vector_path]
@@ -434,6 +444,16 @@ class SvgParser:
     if linejoin in ["miter", "round", "bevel"]:
       return linejoin
     return "miter"  # Default
+
+  def _parse_fill_rule(self, element: ET.Element) -> str:
+    """Parse fill-rule attribute."""
+    fill_rule = self._get_attribute_or_style(element, "fill-rule") or "nonzero"
+
+    # Map SVG values to generator-expected values (case-insensitive)
+    if fill_rule.lower() == "evenodd":
+      return "evenOdd"
+    else:
+      return "nonZero"  # Default (includes "nonzero")
 
   def _parse_style_attribute(self, element: ET.Element) -> dict[str, str]:
     """Parse CSS style attribute into property dictionary."""
@@ -694,6 +714,7 @@ class SvgParser:
     fill_opacity = self._parse_fill_opacity(element)
     stroke_linecap = self._parse_stroke_linecap(element)
     stroke_linejoin = self._parse_stroke_linejoin(element)
+    fill_rule = self._parse_fill_rule(element)
     name = element.get("id", element.tag.split("}")[-1])
 
     vector_path = IrVectorPath(
@@ -706,6 +727,7 @@ class SvgParser:
       fill_alpha=fill_opacity,
       stroke_line_cap=stroke_linecap,
       stroke_line_join=stroke_linejoin,
+      path_fill_type=fill_rule,
     )
 
     return [vector_path]

@@ -58,7 +58,7 @@ def test_image_vector_generator():
   # Verify output contains expected elements
   assert "ImageVector.Builder(" in kotlin_code
   assert 'name = "TestIcon"' in kotlin_code
-  assert "defaultWidth = 24f.dp" in kotlin_code
+  assert "defaultWidth = 24.dp" in kotlin_code
   assert "viewportWidth = 24f" in kotlin_code
   assert "path(" in kotlin_code
   assert "fill = SolidColor(Color.Red)" in kotlin_code

@@ -33,8 +33,8 @@ import androidx.compose.ui.unit.dp
 
 ImageVector.Builder(
   name = "Icon",
-  defaultWidth = 24f.dp,
-  defaultHeight = 24f.dp,
+  defaultWidth = 24.dp,
+  defaultHeight = 24.dp,
   viewportWidth = 24f,
   viewportHeight = 24f,
 ).apply {
@@ -146,8 +146,8 @@ import androidx.compose.ui.unit.dp
 
 ImageVector.Builder(
   name = "Icon",
-  defaultWidth = 24f.dp,
-  defaultHeight = 24f.dp,
+  defaultWidth = 24.dp,
+  defaultHeight = 24.dp,
   viewportWidth = 24f,
   viewportHeight = 24f,
 ).apply {
@@ -177,8 +177,8 @@ import androidx.compose.ui.unit.dp
 
 val HomeIconIcon: ImageVector = ImageVector.Builder(
   name = "HomeIcon",
-  defaultWidth = 24f.dp,
-  defaultHeight = 24f.dp,
+  defaultWidth = 24.dp,
+  defaultHeight = 24.dp,
   viewportWidth = 24f,
   viewportHeight = 24f,
 ).apply {
@@ -217,8 +217,8 @@ fun SearchIconIcon(
   return remember {
     ImageVector.Builder(
       name = "SearchIcon",
-      defaultWidth = 24f.dp,
-      defaultHeight = 24f.dp,
+      defaultWidth = 24.dp,
+      defaultHeight = 24.dp,
       viewportWidth = 24f,
       viewportHeight = 24f,
     ).apply {
@@ -252,8 +252,8 @@ object SettingsIconIcon {
   val imageVector: ImageVector by lazy {
     ImageVector.Builder(
       name = "SettingsIcon",
-      defaultWidth = 24f.dp,
-      defaultHeight = 24f.dp,
+      defaultWidth = 24.dp,
+      defaultHeight = 24.dp,
       viewportWidth = 24f,
       viewportHeight = 24f,
     ).apply {
@@ -343,8 +343,8 @@ import androidx.compose.ui.unit.dp
  val HomeIconIcon: ImageVector by lazy {
     ImageVector.Builder(
     name = "HomeIcon",
-    defaultWidth = 24f.dp,
-    defaultHeight = 24f.dp,
+    defaultWidth = 24.dp,
+    defaultHeight = 24.dp,
     viewportWidth = 24f,
     viewportHeight = 24f,
     ).apply {
@@ -388,8 +388,8 @@ sealed class Ui {
     val imageVector: ImageVector by lazy {
       ImageVector.Builder(
         name = "Button",
-        defaultWidth = 24f.dp,
-        defaultHeight = 24f.dp,
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
         viewportWidth = 24f,
         viewportHeight = 24f,
       ).apply {
@@ -446,8 +446,8 @@ fun SearchIcon(
   return remember(size, tint) {
     ImageVector.Builder(
       name = "SearchIcon",
-      defaultWidth = 24f.dp,
-      defaultHeight = 24f.dp,
+      defaultWidth = 24.dp,
+      defaultHeight = 24.dp,
       viewportWidth = 24f,
       viewportHeight = 24f,
     ).apply {
@@ -549,8 +549,8 @@ fun HomeIcon(
   return remember {
     ImageVector.Builder(
       name = "Home",
-      defaultWidth = 24f.dp,
-      defaultHeight = 24f.dp,
+      defaultWidth = 24.dp,
+      defaultHeight = 24.dp,
       viewportWidth = 24f,
       viewportHeight = 24f,
     ).apply {
@@ -578,8 +578,8 @@ fun ComplexIcon(): ImageVector {
   return remember {
     ImageVector.Builder(
       name = "ComplexIcon",
-      defaultWidth = 48f.dp,
-      defaultHeight = 48f.dp,
+      defaultWidth = 48.dp,
+      defaultHeight = 48.dp,
       viewportWidth = 48f,
       viewportHeight = 48f,
     ).apply {

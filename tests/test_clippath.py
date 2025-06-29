@@ -276,8 +276,8 @@ class TestClipPath:
 
     expected_output = """ImageVector.Builder(
   name = "UnnamedIcon",
-  defaultWidth = 24f.dp,
-  defaultHeight = 24f.dp,
+  defaultWidth = 24.dp,
+  defaultHeight = 24.dp,
   viewportWidth = 100f,
   viewportHeight = 100f,
 ).apply {
@@ -326,8 +326,8 @@ class TestClipPath:
 
     expected_output = """ImageVector.Builder(
   name = "UnnamedIcon",
-  defaultWidth = 24f.dp,
-  defaultHeight = 24f.dp,
+  defaultWidth = 24.dp,
+  defaultHeight = 24.dp,
   viewportWidth = 100f,
   viewportHeight = 100f,
 ).apply {
@@ -449,8 +449,8 @@ class TestClipPath:
 
     expected_output = """ImageVector.Builder(
   name = "UnnamedIcon",
-  defaultWidth = 24f.dp,
-  defaultHeight = 24f.dp,
+  defaultWidth = 24.dp,
+  defaultHeight = 24.dp,
   viewportWidth = 100f,
   viewportHeight = 100f,
 ).apply {

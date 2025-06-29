@@ -1,0 +1,5 @@
+<!-- Complex path test: curves, arcs, relative commands -->
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <path d="M50,50 Q100,25 150,50 T200,75 L175,125 A25,25 0 0 1 125,150 C100,175 75,175 50,150 Z" 
+        fill="#9932CC" stroke="#000" stroke-width="2"/>
+</svg>

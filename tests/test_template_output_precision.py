@@ -37,8 +37,8 @@ class TestTemplateOutputPrecision:
 
       ImageVector.Builder(
         name = "UnnamedIcon",
-        defaultWidth = 24f.dp,
-        defaultHeight = 24f.dp,
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
         viewportWidth = 24f,
         viewportHeight = 24f,
       ).apply {
@@ -86,8 +86,8 @@ class TestTemplateOutputPrecision:
 
       ImageVector.Builder(
         name = "UnnamedIcon",
-        defaultWidth = 48f.dp,
-        defaultHeight = 48f.dp,
+        defaultWidth = 48.dp,
+        defaultHeight = 48.dp,
         viewportWidth = 48f,
         viewportHeight = 48f,
       ).apply {
@@ -144,8 +144,8 @@ class TestTemplateOutputPrecision:
         return remember {
           ImageVector.Builder(
             name = "CircleIcon",
-            defaultWidth = 16f.dp,
-            defaultHeight = 16f.dp,
+            defaultWidth = 16.dp,
+            defaultHeight = 16.dp,
             viewportWidth = 16f,
             viewportHeight = 16f,
           ).apply {
@@ -195,8 +195,8 @@ class TestTemplateOutputPrecision:
 
       val DiamondIconIcon: ImageVector = ImageVector.Builder(
         name = "DiamondIcon",
-        defaultWidth = 32f.dp,
-        defaultHeight = 32f.dp,
+        defaultWidth = 32.dp,
+        defaultHeight = 32.dp,
         viewportWidth = 32f,
         viewportHeight = 32f,
       ).apply {
@@ -247,8 +247,8 @@ class TestTemplateOutputPrecision:
         val imageVector: ImageVector by lazy {
           ImageVector.Builder(
             name = "TriangleIcon",
-            defaultWidth = 20f.dp,
-            defaultHeight = 20f.dp,
+            defaultWidth = 20.dp,
+            defaultHeight = 20.dp,
             viewportWidth = 20f,
             viewportHeight = 20f,
           ).apply {

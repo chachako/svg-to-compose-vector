@@ -181,7 +181,7 @@ def templates():
 @cli.command()
 def version():
   """Show version information."""
-  click.echo("SVG to Compose ImageVector Converter v0.1.4")
+  click.echo("SVG to Compose ImageVector Converter v0.1.5")
   click.echo("Built with modern Python and targeting Compose UI")
 
 

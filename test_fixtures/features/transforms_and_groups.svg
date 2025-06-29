@@ -1,0 +1,11 @@
+<!-- Groups and transforms test -->
+<svg width="150" height="150" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+  <g id="main-group" transform="translate(75,75)">
+    <g id="rotated-group" transform="rotate(45)">
+      <rect x="-20" y="-20" width="40" height="40" fill="#FF6B35"/>
+    </g>
+    <g id="scaled-group" transform="scale(0.5) translate(60,0)">
+      <circle r="15" fill="#F7931E"/>
+    </g>
+  </g>
+</svg>

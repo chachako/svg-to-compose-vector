@@ -1,0 +1,12 @@
+<!-- Edge case: different namespace declarations -->
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="80" height="80" viewBox="0 0 80 80">
+  <rect x="10" y="10" width="60" height="60" fill="url(#testGrad)"/>
+  <defs>
+    <linearGradient id="testGrad">
+      <stop offset="0" stop-color="red"/>
+      <stop offset="1" stop-color="blue"/>
+    </linearGradient>
+  </defs>
+</svg>

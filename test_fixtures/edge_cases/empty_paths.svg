@@ -1,0 +1,6 @@
+<!-- Edge case: empty and minimal paths -->
+<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+  <path d="" fill="red"/>
+  <path d="M25,25" fill="blue"/>
+  <path d="M10,10 Z" fill="green"/>
+</svg>
