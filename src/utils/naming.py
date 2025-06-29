@@ -78,12 +78,12 @@ class NameComponents:
 
   @property
   def full_path_pascal(self) -> str:
-    """Full path in PascalCase format.
+    """Full path in PascalCase.
     
-    Example: 'ui.buttons.primary' -> 'Ui.Buttons.Primary'
-    Example: 'arrow_left' -> 'ArrowLeft'
+    Example: 'ui.button' -> 'Ui.Button'
+    Example: 'system.dialog.modal' -> 'System.Dialog.Modal'
     """
-    return self._to_pascal_case(self.full_path)
+    return ".".join(self._pascalize_word(cat) for cat in self.categories)
 
   @property
   def full_path_camel(self) -> str:
@@ -93,6 +93,54 @@ class NameComponents:
     Example: 'arrow_left' -> 'arrowLeft'
     """
     return self._to_camel_case(self.full_path)
+
+  @property
+  def namespace_path_components(self) -> List[str]:
+    """Namespace path components for creating nested directories.
+    
+    Example: 'ui.button' -> ['Ui']
+    Example: 'system.dialog.modal' -> ['System', 'Dialog']
+    Example: 'icon' -> [] (empty)
+    """
+    if len(self.categories) > 1:
+      return [self._pascalize_word(cat) for cat in self.categories[:-1]]
+    return []
+
+  @property
+  def namespace_path_components_lowercase(self) -> List[str]:
+    """Namespace path components in lowercase for directory creation.
+    
+    Example: 'ui.button' -> ['ui']
+    Example: 'system.dialog.modal' -> ['system', 'dialog']
+    Example: 'icon' -> [] (empty)
+    """
+    if len(self.categories) > 1:
+      return [cat.lower() for cat in self.categories[:-1]]
+    return []
+
+  @property
+  def namespace_nested_path(self) -> Path:
+    """Namespace as nested Path object for directory creation.
+    
+    Example: 'ui.button' -> Path('Ui')
+    Example: 'system.dialog.modal' -> Path('System/Dialog')
+    Example: 'icon' -> Path('.') (current dir)
+    """
+    if self.namespace_path_components:
+      return Path(*self.namespace_path_components)
+    return Path(".")
+
+  @property
+  def namespace_nested_path_lowercase(self) -> Path:
+    """Namespace as nested Path object with lowercase directories.
+    
+    Example: 'ui.button' -> Path('ui')
+    Example: 'system.dialog.modal' -> Path('system/dialog')
+    Example: 'icon' -> Path('.') (current dir)
+    """
+    if self.namespace_path_components_lowercase:
+      return Path(*self.namespace_path_components_lowercase)
+    return Path(".")
 
   def _to_pascal_case(self, text: str) -> str:
     """Convert text to PascalCase, preserving dot separators."""
@@ -135,6 +183,10 @@ class NameComponents:
     """Convert single word to camelCase."""
     capitalized = self._capitalize_word(word)
     return capitalized[0].lower() + capitalized[1:] if capitalized else ""
+
+  def _pascalize_word(self, word: str) -> str:
+    """Convert a word to PascalCase."""
+    return self._capitalize_word(word)
 
 
 class NameResolver:
