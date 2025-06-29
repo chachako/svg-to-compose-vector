@@ -32,6 +32,7 @@ class TestTemplateOutputPrecision:
       import androidx.compose.ui.graphics.Color
       import androidx.compose.ui.graphics.SolidColor
       import androidx.compose.ui.graphics.vector.ImageVector
+      import androidx.compose.ui.graphics.vector.path
       import androidx.compose.ui.unit.dp
 
       ImageVector.Builder(
@@ -80,6 +81,7 @@ class TestTemplateOutputPrecision:
       import androidx.compose.ui.graphics.Color
       import androidx.compose.ui.graphics.SolidColor
       import androidx.compose.ui.graphics.vector.ImageVector
+      import androidx.compose.ui.graphics.vector.path
       import androidx.compose.ui.unit.dp
 
       ImageVector.Builder(
@@ -127,6 +129,7 @@ class TestTemplateOutputPrecision:
       import androidx.compose.ui.graphics.Color
       import androidx.compose.ui.graphics.SolidColor
       import androidx.compose.ui.graphics.vector.ImageVector
+      import androidx.compose.ui.graphics.vector.path
       import androidx.compose.ui.unit.dp
       import androidx.compose.runtime.Composable
       import androidx.compose.runtime.remember
@@ -187,6 +190,7 @@ class TestTemplateOutputPrecision:
       import androidx.compose.ui.graphics.Color
       import androidx.compose.ui.graphics.SolidColor
       import androidx.compose.ui.graphics.vector.ImageVector
+      import androidx.compose.ui.graphics.vector.path
       import androidx.compose.ui.unit.dp
 
       val DiamondIconIcon: ImageVector = ImageVector.Builder(
@@ -236,6 +240,7 @@ class TestTemplateOutputPrecision:
       import androidx.compose.ui.graphics.Color
       import androidx.compose.ui.graphics.SolidColor
       import androidx.compose.ui.graphics.vector.ImageVector
+      import androidx.compose.ui.graphics.vector.path
       import androidx.compose.ui.unit.dp
 
       object TriangleIconIcon {

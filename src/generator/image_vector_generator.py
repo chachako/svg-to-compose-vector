@@ -62,6 +62,9 @@ class ImageVectorGenerator:
     lines = []
     indent = "  " * self.indent_level
 
+    # Add import for path DSL function
+    self.imports.add("androidx.compose.ui.graphics.vector.path")
+
     # Only generate parameter block if any non-default values are present
     # This keeps generated code clean by omitting default values
     has_parameters = (
