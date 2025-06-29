@@ -142,8 +142,9 @@ class ImageVectorGenerator:
       or group.translation_x != 0.0
       or group.translation_y != 0.0
     )
+    has_clip_path = bool(group.clip_path_data)
 
-    if has_name or has_transform:
+    if has_name or has_transform or has_clip_path:
       lines.append(f"{indent}group(")
 
       # Name parameter comes first (if present)
@@ -170,6 +171,11 @@ class ImageVectorGenerator:
 
       if group.translation_y != 0.0:
         lines.append(f"{indent}  translationY = {format_float(group.translation_y)},")
+
+      if has_clip_path:
+        self.imports.add("androidx.compose.ui.graphics.vector.PathNode")
+        clip_path_code = self._generate_clip_path_data(group.clip_path_data, indent_level=self.indent_level + 1)
+        lines.append(f"{indent}  clipPathData = {clip_path_code},")
 
       lines.append(f"{indent}) {{")
     else:
@@ -256,3 +262,66 @@ class ImageVectorGenerator:
     else:
       # Fallback to hex notation: SolidColor(Color(0xFFFFFFFF))
       return f"SolidColor({color.to_compose_color()})"
+
+  def _generate_clip_path_data(self, clip_path_nodes, indent_level: int = 1) -> str:
+    """Generate clipPathData list of PathNode elements."""
+    if not clip_path_nodes:
+      return "emptyList()"
+    
+    # For short clip paths, use single line format
+    if len(clip_path_nodes) <= 3:
+      path_dsl = path_data_to_dsl(clip_path_nodes)
+      # Convert DSL to PathNode list format
+      return self._convert_dsl_to_path_node_list(path_dsl)
+    
+    # For longer clip paths, use multiline format
+    indent = "  " * indent_level
+    lines = ["listOf("]
+    
+    path_dsl = path_data_to_dsl(clip_path_nodes)
+    dsl_lines = path_dsl.split('\n')
+    
+    for i, line in enumerate(dsl_lines):
+      line = line.strip()
+      if line:
+        # Convert DSL commands to PathNode calls
+        path_node_call = self._convert_dsl_line_to_path_node(line)
+        if i < len(dsl_lines) - 1:
+          lines.append(f"{indent}  {path_node_call},")
+        else:
+          lines.append(f"{indent}  {path_node_call}")
+    
+    lines.append(f"{indent})")
+    return "\n".join(lines)
+
+  def _convert_dsl_to_path_node_list(self, dsl: str) -> str:
+    """Convert path DSL to single-line PathNode list."""
+    dsl_lines = [line.strip() for line in dsl.split('\n') if line.strip()]
+    path_nodes = []
+    
+    for line in dsl_lines:
+      path_node = self._convert_dsl_line_to_path_node(line)
+      path_nodes.append(path_node)
+    
+    return f"listOf({', '.join(path_nodes)})"
+
+  def _convert_dsl_line_to_path_node(self, dsl_line: str) -> str:
+    """Convert a single DSL line to PathNode call."""
+    dsl_line = dsl_line.strip()
+    
+    # Handle different DSL commands
+    if dsl_line.startswith("moveTo("):
+      return dsl_line.replace("moveTo(", "PathNode.MoveTo(")
+    elif dsl_line.startswith("lineTo("):
+      return dsl_line.replace("lineTo(", "PathNode.LineTo(")
+    elif dsl_line.startswith("curveTo("):
+      return dsl_line.replace("curveTo(", "PathNode.CurveTo(")
+    elif dsl_line.startswith("quadTo("):
+      return dsl_line.replace("quadTo(", "PathNode.QuadTo(")
+    elif dsl_line.startswith("arcTo("):
+      return dsl_line.replace("arcTo(", "PathNode.ArcTo(")
+    elif dsl_line.startswith("close()"):
+      return "PathNode.Close"
+    else:
+      # Fallback - assume it's already in PathNode format
+      return dsl_line

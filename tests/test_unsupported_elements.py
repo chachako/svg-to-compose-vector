@@ -67,7 +67,7 @@ class TestUnsupportedElementWarnings:
     
     output = io.StringIO()
     with redirect_stdout(output):
-      ir = parser.parse_svg(svg_content)
+      parser.parse_svg(svg_content)
     
     warning_output = output.getvalue()
     assert "Filter element '<filter>' is not supported" in warning_output
@@ -87,7 +87,7 @@ class TestUnsupportedElementWarnings:
     
     output = io.StringIO()
     with redirect_stdout(output):
-      ir = parser.parse_svg(svg_content)
+      parser.parse_svg(svg_content)
     
     warning_output = output.getvalue()
     assert "Animation element '<animate>' is not supported" in warning_output
@@ -168,7 +168,7 @@ class TestUnsupportedElementWarnings:
     
     output = io.StringIO()
     with redirect_stdout(output):
-      ir = parser.parse_svg(svg_content)
+      parser.parse_svg(svg_content)
     
     warning_output = output.getvalue()
     assert "Text element '<text>' is not supported" in warning_output

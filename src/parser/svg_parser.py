@@ -6,6 +6,7 @@ from ..ir.image_vector import IrImageVector
 from ..ir.vector_node import IrVectorNode, IrVectorPath, IrVectorGroup
 from ..ir.color import IrColor
 from ..ir.gradient import IrFill, IrColorFill
+from ..ir.path_node import IrPathNode
 from .path_parser import PathParser
 from .transform_parser import TransformParser
 from .gradient_parser import GradientParser
@@ -19,6 +20,7 @@ class ParseContext:
     self.parent_styles: Dict[str, str] = {}
     self.transform_stack: List[str] = []
     self.gradients: Dict[str, IrFill] = {}
+    self.clip_paths: Dict[str, List[IrPathNode]] = {}
     self.warnings: List[str] = []
 
 
@@ -177,6 +179,8 @@ class SvgParser:
       return self._parse_polygon_element(element, context)
     elif tag == "polyline":
       return self._parse_polyline_element(element, context)
+    elif tag == "clipPath":
+      return self._parse_clippath_element(element, context)
     elif tag in ["style", "title", "desc", "metadata"]:
       # Skip these elements for now
       return []
@@ -260,10 +264,11 @@ class SvgParser:
   def _parse_group_element(
     self, group_element: ET.Element, context: ParseContext
   ) -> List[IrVectorNode]:
-    """Parse a group element with support for transforms."""
+    """Parse a group element with support for transforms and clip paths."""
     # Parse group attributes
     group_name = group_element.get("id", "group")
     transform_str = group_element.get("transform", "")
+    clip_path_str = self._get_attribute_or_style(group_element, "clip-path")
     
     # Parse child elements
     children = []
@@ -280,14 +285,25 @@ class SvgParser:
     if transform_str:
       transform_params = self.transform_parser.parse_transform_to_group_params(transform_str)
     
-    # If no transform and only one child, we can flatten to avoid unnecessary nesting
-    if not transform_params and len(children) == 1:
+    # Parse clip path if present
+    clip_path_data = []
+    has_clip_path_attribute = clip_path_str and clip_path_str.startswith("url(#") and clip_path_str.endswith(")")
+    if has_clip_path_attribute:
+      clip_path_id = clip_path_str[5:-1]  # Remove "url(#" and ")"
+      if clip_path_id in context.clip_paths:
+        clip_path_data = context.clip_paths[clip_path_id]
+    
+    # If no transform, clip path attribute, and only one child, we can flatten to avoid unnecessary nesting
+    # Note: we check has_clip_path_attribute rather than clip_path_data to preserve groups 
+    # that reference clipPaths even if the clipPath is empty
+    if not transform_params and not has_clip_path_attribute and len(children) == 1:
       return children
     
     # Create group node
     group = IrVectorGroup(
       children=children,
       name=group_name,
+      clip_path_data=clip_path_data,
       **transform_params
     )
     
@@ -696,3 +712,38 @@ class SvgParser:
       
       # Recursively check nested children
       self._check_unsupported_children(child, context)
+
+  def _parse_clippath_element(self, clippath_element: ET.Element, context: ParseContext) -> List[IrVectorNode]:
+    """Parse clipPath element and store path data in context."""
+    clippath_id = clippath_element.get("id")
+    if not clippath_id:
+      return []
+
+    # Collect all path data from children
+    clip_path_nodes = []
+    
+    for child in clippath_element:
+      # Parse child elements to get their path data
+      child_nodes = self._parse_element(child, context)
+      
+      # Extract path data from IrVectorPath nodes
+      for node in child_nodes:
+        if isinstance(node, IrVectorPath):
+          clip_path_nodes.extend(node.paths)
+        elif isinstance(node, IrVectorGroup):
+          # Recursively extract paths from groups
+          self._extract_paths_from_group(node, clip_path_nodes)
+    
+    # Store the clip path data in context
+    context.clip_paths[clippath_id] = clip_path_nodes
+    
+    # clipPath elements don't generate visible content themselves
+    return []
+
+  def _extract_paths_from_group(self, group: IrVectorGroup, path_list: List[IrPathNode]) -> None:
+    """Recursively extract path nodes from a group and its children."""
+    for child in group.children:
+      if isinstance(child, IrVectorPath):
+        path_list.extend(child.paths)
+      elif isinstance(child, IrVectorGroup):
+        self._extract_paths_from_group(child, path_list)
