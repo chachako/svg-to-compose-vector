@@ -10,6 +10,7 @@ from .parser.svg_parser import SvgParser
 from .generator.image_vector_generator import ImageVectorGenerator
 from .generator.template_engine import TemplateEngine
 from .core.config import Config
+from .utils.naming import NameResolver
 
 
 @click.group(invoke_without_command=True)
@@ -89,24 +90,24 @@ def convert(
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
 
-    # Override name if provided
-    if name:
-      ir.name = name
-    elif ir.name == "UnnamedIcon":
-      # Use filename as default name if not specified in SVG
-      ir.name = input_file.stem.replace("-", "_").replace(" ", "_")
+    # Resolve name components using new naming system
+    name_resolver = NameResolver()
+    name_components = name_resolver.resolve_name(input_file, name)
+
+    # Set the IR name to the final name part for internal consistency
+    ir.name = name_components.name_part_pascal
 
     # Generate Kotlin code
     generator = ImageVectorGenerator()
     core_code, imports = generator.generate_core_code(ir)
 
-    # Apply template
+    # Apply template with flexible naming
     template_engine = TemplateEngine(config_obj)
     final_code = template_engine.render(
       template_name=template_name,
       build_code=core_code,
       imports=imports,
-      icon_name=ir.name
+      name_components=name_components,
     )
 
     # Output result
@@ -134,10 +135,14 @@ def info(input_file: Path):
     parser = SvgParser()
     ir = parser.parse_svg(svg_content)
 
+    # Use name resolver for consistent naming
+    name_resolver = NameResolver()
+    name_components = name_resolver.resolve_name(input_file)
+
     click.echo(f"File: {input_file}")
     click.echo(f"Dimensions: {ir.default_width}x{ir.default_height} dp")
     click.echo(f"Viewport: {ir.viewport_width}x{ir.viewport_height}")
-    click.echo(f"Vector name: {ir.name}")
+    click.echo(f"Vector name: {name_components.name_part_pascal}")
     click.echo(f"Auto-mirror: {ir.auto_mirror}")
     click.echo(f"Nodes: {len(ir.nodes)}")
 

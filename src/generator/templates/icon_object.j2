@@ -1,6 +1,6 @@
 {{- imports }}
 
-object {{ icon_name }}Icon {
+object {{ icon }}Icon {
   val imageVector: ImageVector by lazy {
     {{ build_code | indent(4, first=False) }}
   }

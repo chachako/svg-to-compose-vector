@@ -139,7 +139,7 @@ class TestTemplateOutputPrecision:
       import androidx.compose.ui.graphics.Color
 
       @Composable
-      fun CircleiconIcon(
+      fun CircleIconIcon(
         modifier: Modifier = Modifier,
         tint: Color = Color.Unspecified
       ): ImageVector {
@@ -195,7 +195,7 @@ class TestTemplateOutputPrecision:
       import androidx.compose.ui.graphics.vector.ImageVector
       import androidx.compose.ui.unit.dp
 
-      val DiamondiconIcon: ImageVector = ImageVector.Builder(
+      val DiamondIconIcon: ImageVector = ImageVector.Builder(
         name = "DiamondIcon",
         defaultWidth = 32f.dp,
         defaultHeight = 32f.dp,
@@ -245,7 +245,7 @@ class TestTemplateOutputPrecision:
       import androidx.compose.ui.graphics.vector.ImageVector
       import androidx.compose.ui.unit.dp
 
-      object TriangleiconIcon {
+      object TriangleIconIcon {
         val imageVector: ImageVector by lazy {
           ImageVector.Builder(
             name = "TriangleIcon",

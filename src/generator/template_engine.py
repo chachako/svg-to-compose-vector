@@ -9,6 +9,7 @@ except ImportError:
   HAS_JINJA2 = False
 
 from ..core.config import Config
+from ..utils.naming import NameComponents, NameResolver
 
 
 class TemplateEngine:
@@ -41,10 +42,20 @@ class TemplateEngine:
     template_name: str,
     build_code: str,
     imports: Set[str],
-    icon_name: str,
+    name_components: Optional[NameComponents] = None,
+    icon_name: Optional[str] = None,
     **template_vars
   ) -> str:
     """Render template with provided variables."""
+    
+    # Handle backward compatibility: create NameComponents from icon_name if needed
+    if name_components is None:
+      if icon_name is None:
+        raise ValueError("Either name_components or icon_name must be provided")
+      
+      # Use NameResolver to properly parse the icon_name
+      name_resolver = NameResolver()
+      name_components = name_resolver.resolve_name_from_string(icon_name)
     
     # Fallback to simple string interpolation if Jinja2 not available
     if not HAS_JINJA2 or not self._env:
@@ -57,7 +68,12 @@ class TemplateEngine:
     variables = {
       "imports": formatted_imports,
       "build_code": build_code,
-      "icon_name": self._to_pascal_case(icon_name),
+      "name": name_components,  # Complete NameComponents object
+      "namespace": name_components.namespace_part_pascal,
+      "icon": name_components.name_part_pascal,
+      "full_name": name_components.full_path_pascal,
+      # Backward compatibility - pass raw name for filter processing
+      "icon_name": name_components.name,  # Use raw name, not pascal case
       **template_vars,
     }
 
@@ -111,6 +127,7 @@ class TemplateEngine:
       
       return "\n".join(lines)
     else:
+      # Simple sorted list without grouping
       return "\n".join(f"import {imp}" for imp in sorted_imports)
 
   def _to_pascal_case(self, text: str) -> str:

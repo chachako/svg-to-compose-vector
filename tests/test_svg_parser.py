@@ -41,7 +41,7 @@ class TestSvgParser:
     assert ir.default_height == 100.0
     assert ir.viewport_width == 100.0
     assert ir.viewport_height == 100.0
-    assert ir.name == "triangle"
+    assert ir.name == "UnnamedIcon"
 
     # Should have one path node
     assert len(ir.nodes) == 1
@@ -182,7 +182,7 @@ def test_svg_parser_integration():
   ir = parser.parse_svg(star_svg)
 
   # Verify IR structure
-  assert ir.name == "star"
+  assert ir.name == "UnnamedIcon"
   assert len(ir.nodes) == 1
   assert isinstance(ir.nodes[0], IrVectorPath)
 
@@ -192,7 +192,7 @@ def test_svg_parser_integration():
 
   # Verify generated code contains expected elements
   assert "ImageVector.Builder(" in kotlin_code
-  assert 'name = "star"' in kotlin_code
+  assert 'name = "UnnamedIcon"' in kotlin_code
   assert "viewportWidth = 24f" in kotlin_code
   assert "path(" in kotlin_code
   assert "fill = SolidColor(Color(0xFFFFCC00))" in kotlin_code  # Gold color

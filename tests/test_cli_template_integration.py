@@ -133,7 +133,7 @@ val {{ icon_name | pascal_case }}CustomIcon = {{ build_code }}"""
     ])
     
     assert result.exit_code == 0
-    assert "fun CustomnameIcon(" in result.output  # PascalCase conversion removes spaces
+    assert "fun CustomNameIcon(" in result.output  # PascalCase conversion
 
   def test_convert_config_overrides_defaults(self, runner, svg_file):
     """Test that config file options override defaults."""

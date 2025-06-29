@@ -97,7 +97,7 @@ class TestTemplateSystemIntegration:
     assert "import androidx.compose.runtime.remember" in result
     assert "import androidx.compose.ui.Modifier" in result
     assert "@Composable" in result
-    assert "fun HomeiconIcon(" in result  # PascalCase conversion behavior
+    assert "fun HomeIconIcon(" in result  # PascalCase conversion behavior
     assert "modifier: Modifier = Modifier" in result
     assert "tint: Color = Color.Unspecified" in result
     assert "return remember {" in result
@@ -144,7 +144,7 @@ class TestTemplateSystemIntegration:
     )
     
     # Verify val declaration is generated
-    assert "val UnnamediconIcon: ImageVector = ImageVector.Builder(" in result
+    assert "val UnnamedIconIcon: ImageVector = ImageVector.Builder(" in result
 
   def test_end_to_end_custom_template(self, simple_svg):
     """Test complete pipeline with custom template file."""
@@ -189,9 +189,9 @@ private var _{{ icon_name | camel_case }}: ImageVector? = null"""
       )
       
       # Verify custom template output (PascalCase conversion behavior)
-      assert "Generated icon: Mycustomicon" in result
-      assert "val Icons.Default.Mycustomicon: ImageVector" in result
-      assert "private var _mycustomicon: ImageVector? = null" in result
+      assert "Generated icon: MyCustomIcon" in result
+      assert "val Icons.Default.MyCustomIcon: ImageVector" in result
+      assert "private var _myCustomIcon: ImageVector? = null" in result
       assert "ImageVector.Builder(" in result
 
   def test_end_to_end_complex_svg(self, complex_svg):
@@ -215,7 +215,7 @@ private var _{{ icon_name | camel_case }}: ImageVector? = null"""
     assert "import androidx.compose.ui.graphics.Brush" in result
     assert "import androidx.compose.ui.geometry.Offset" in result
     assert "@Composable" in result
-    assert "fun ComplexiconIcon(" in result  # PascalCase conversion behavior
+    assert "fun ComplexIconIcon(" in result  # PascalCase conversion behavior
     assert "group(" in result
     assert "Brush.linearGradient" in result
     assert "translationX = 10f" in result

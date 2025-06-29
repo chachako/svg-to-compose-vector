@@ -108,7 +108,7 @@ val CustomIcon = {{ build_code }}"""
         icon_name="test_icon"
       )
       
-      assert "// Custom template for Testicon" in result
+      assert "// Custom template for TestIcon" in result
       assert "val CustomIcon = ImageVector.Builder().build()" in result
 
   def test_render_with_val_declaration_template(self):
@@ -123,7 +123,7 @@ val CustomIcon = {{ build_code }}"""
       icon_name="TestIcon"
     )
     
-    assert "val TesticonIcon: ImageVector = ImageVector.Builder().build()" in result
+    assert "val TestIconIcon: ImageVector = ImageVector.Builder().build()" in result
 
   def test_format_imports_grouped(self):
     """Test import formatting with grouping enabled."""

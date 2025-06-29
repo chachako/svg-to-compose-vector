@@ -59,18 +59,6 @@ class SvgParser:
     """Parse the root SVG element."""
     context = ParseContext()
 
-    # Extract SVG attributes - use id from first path if available
-    # Example: <svg><path id="star" d="..."/></svg> -> name becomes "star"
-    name = svg_element.get("id")
-    if not name:
-      # Try to get name from first path element
-      for child in svg_element:
-        if (child.tag == "path" or child.tag.endswith("}path")) and child.get("id"):
-          name = child.get("id")
-          break
-      if not name:
-        name = "UnnamedIcon"
-
     # Parse dimensions and viewport
     width, height = self._parse_dimensions(svg_element)
     viewport_width, viewport_height = self._parse_viewport(svg_element, width, height)
@@ -89,7 +77,7 @@ class SvgParser:
       print()
 
     return IrImageVector(
-      name=name,
+      name="UnnamedIcon",
       default_width=width,
       default_height=height,
       viewport_width=viewport_width,

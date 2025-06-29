@@ -272,7 +272,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
 @Composable
-fun HomeiconIcon(
+fun HomeIconIcon(
   modifier: Modifier = Modifier,
   tint: Color = Color.Unspecified
 ): ImageVector {
@@ -479,9 +479,9 @@ object {{ icon_name | pascal_case }}Icons {
       
       lines = result.split('\n')
       
-      # Check custom template structure (PascalCase converts custom_icon to Customicon)
-      assert any('Customicon icon' in line for line in lines), "Should have custom header comment"
-      assert any('object CustomiconIcons {' in line for line in lines), "Should have custom object declaration"
+      # Check custom template structure (PascalCase converts custom_icon to CustomIcon)
+      assert any('CustomIcon icon' in line for line in lines), "Should have custom header comment"
+      assert any('object CustomIconIcons {' in line for line in lines), "Should have custom object declaration"
       assert any('val Default: ImageVector by lazy {' in line for line in lines), "Should have custom property"
       
       # Check indentation of nested ImageVector (8 spaces as specified in template)
