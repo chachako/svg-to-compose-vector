@@ -1,16 +1,16 @@
 {{- imports }}
 
 {%- set color_mappings = {
-    "#2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary"},
-    "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"},
-    "#4CAF50": {"semantic_name": "successColor", "default_value": "MaterialTheme.colorScheme.tertiary"},
-    "#F44336": {"semantic_name": "errorColor", "default_value": "MaterialTheme.colorScheme.error"}
+    "#2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"},
+    "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"},
+    "#4CAF50": {"semantic_name": "successColor", "replacement": "MaterialTheme.colorScheme.tertiary"},
+    "#F44336": {"semantic_name": "errorColor", "replacement": "MaterialTheme.colorScheme.error"}
 } -%}
 
 @Composable
 fun {{ name.name_part_pascal }}(
 {%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
-  {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+  {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
 {%- endfor %}
 ): ImageVector {
   return {{ build_code_with_color_params }}

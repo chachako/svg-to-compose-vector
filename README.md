@@ -4,7 +4,7 @@ Convert SVG files to Kotlin Compose ImageVector code with high fidelity and prod
 
 `svg-to-compose-vector` is a Python command-line tool that transforms SVG graphics into Compose ImageVector Kotlin code. It supports advanced SVG features including paths, shapes, gradients, transforms, and strokes, generating clean, optimized Compose code.
 
-[Installation](#installation) • [Usage](#usage) • [Features](#features) • [Templates](#templates) • [Examples](#examples)
+[Installation](#installation) • [Usage](#usage) • [Features](#features) • [Templates](#templates) • [Multicolor Templates](#multicolor-templates) • [Examples](#examples)
 
 ## Features
 
@@ -13,6 +13,7 @@ Convert SVG files to Kotlin Compose ImageVector code with high fidelity and prod
 * **Production-Ready Output**: Generates clean Kotlin code following Compose best practices with optimal parameter usage
 * **Flexible Templates**: Built-in templates for different use cases (val declarations, composable functions, icon objects)
 * **Advanced Color Support**: Full support for hex, RGB, HSL, named colors, and gradients (linear and radial)
+* **Multicolor Template System**: Intelligent color mapping with parameterized @Composable generation for theme-aware icons
 * **Smart Optimizations**: Uses Compose built-in colors (Color.Red vs Color(0xFFFF0000)) and omits default parameters
 * **Comprehensive Error Handling**: Clear warnings for unsupported SVG features with graceful degradation
 * **Batch Processing**: Convert entire directories of SVG files at once
@@ -46,6 +47,40 @@ ImageVector.Builder(
     close()
   }
 }.build()
+```
+
+### Multicolor Template Example
+
+Create theme-aware icons with automatic color parameterization:
+
+```bash
+svg2compose convert icon.svg --multicolor-template theme.j2
+```
+
+Template (theme.j2):
+```jinja2
+{%- set color_mappings = {
+    "#FF0000": {"semantic_name": "errorColor", "replacement": "MaterialTheme.colorScheme.error"},
+    "#0000FF": "MaterialTheme.colorScheme.primary"
+} -%}
+
+@Composable
+fun {{ name.name_part_pascal }}(
+{%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors and mapping.semantic_name is defined %}
+  {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
+{%- endfor %}
+): ImageVector { /* ... */ }
+```
+
+Output:
+```kotlin
+@Composable
+fun MyIcon(errorColor: Color = MaterialTheme.colorScheme.error): ImageVector {
+  return ImageVector.Builder(...).apply {
+    path(fill = SolidColor(errorColor)) { /* red elements */ }
+    path(fill = SolidColor(MaterialTheme.colorScheme.primary)) { /* blue elements */ }
+  }.build()
+}
 ```
 
 ## Installation
@@ -115,6 +150,19 @@ svg2compose batch icons/ output/ --naming "Icon{name}"
 
 # Using specific template
 svg2compose batch icons/ output/ -t composable_function
+```
+
+### Multicolor templates
+
+```bash
+# Use multicolor template for theme-aware icons
+svg2compose convert icon.svg --multicolor-template multicolor.j2
+
+# Combine with regular templates (fallback when colors don't match)
+svg2compose convert icon.svg -t composable_function --multicolor-template theme.j2
+
+# Batch convert with multicolor support
+svg2compose batch icons/ output/ -t val_declaration --multicolor-template theme_template.j2
 ```
 
 ### File information
@@ -502,6 +550,151 @@ svg2compose convert navigation.home.svg -t my_custom_template.j2 -o HomeIcon.kt
 
 # The template receives all the variables and can generate any format you need
 ```
+
+## Multicolor Templates
+
+Transform SVG files with multiple colors into theme-aware @Composable functions using intelligent color mapping.
+
+### Overview
+
+Multicolor templates enable automatic color parameterization, allowing icons to adapt to different themes:
+
+- **Smart Color Detection**: Automatically extracts colors from SVG files
+- **Intelligent Template Selection**: Uses multicolor template when SVG colors match mappings, falls back to regular template otherwise
+- **Works with Any Template**: Combine with `default`, `composable_function`, `val_declaration`, or custom templates
+- **Partial Mapping Support**: Unmapped colors retain original hex values
+- **Transparency Support**: Full ARGB support for transparent colors
+
+### Template Formats
+
+#### Full Format (with parameters)
+Creates function parameters for theme customization:
+
+```jinja2
+{{- imports }}
+
+{%- set color_mappings = {
+    "#FF0000": {"semantic_name": "errorColor", "replacement": "Color.Red"},
+    "#0000FF": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"}
+} -%}
+
+@Composable
+fun {{ name.name_part_pascal }}(
+{%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
+  {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
+{%- endfor %}
+): ImageVector {
+  return {{ build_code_with_color_params }}
+}
+```
+
+**Generated Output:**
+```kotlin
+@Composable
+fun MyIcon(
+  errorColor: Color = Color.Red,
+  primaryColor: Color = MaterialTheme.colorScheme.primary
+): ImageVector {
+  return ImageVector.Builder(...).apply {
+    path(fill = SolidColor(errorColor)) { /* red paths */ }
+    path(fill = SolidColor(primaryColor)) { /* blue paths */ }
+  }.build()
+}
+```
+
+#### Simplified Format (direct replacement)
+Directly replaces colors without creating parameters:
+
+```jinja2
+{{- imports }}
+
+{%- set color_mappings = {
+    "#FF0000": "MaterialTheme.colorScheme.error",
+    "#0000FF": "MaterialTheme.colorScheme.primary"
+} -%}
+
+@Composable
+fun {{ name.name_part_pascal }}(): ImageVector {
+  return {{ build_code_with_color_params }}
+}
+```
+
+**Generated Output:**
+```kotlin
+@Composable
+fun MyIcon(): ImageVector {
+  return ImageVector.Builder(...).apply {
+    path(fill = SolidColor(MaterialTheme.colorScheme.error)) { /* red paths */ }
+    path(fill = SolidColor(MaterialTheme.colorScheme.primary)) { /* blue paths */ }
+  }.build()
+}
+```
+
+#### Mixed Format
+Combine both approaches in a single template:
+
+```jinja2
+{%- set color_mappings = {
+    "#FF0000": {"semantic_name": "errorColor", "replacement": "Color.Red"},
+    "#0000FF": "MaterialTheme.colorScheme.primary",
+    "#00FF00": "MaterialTheme.colorScheme.secondary"
+} -%}
+```
+
+### Template Variables
+
+Multicolor templates have access to additional variables:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `build_code_with_color_params` | ImageVector code with color substitution | `ImageVector.Builder(...)` |
+| `used_colors` | Set of colors found in SVG | `{"#FF0000", "#0000FF"}` |
+| `color_mappings` | Your color mapping configuration | `{...}` |
+
+### Usage Examples
+
+**Theme-aware icon library:**
+```bash
+# Convert with multicolor template only
+svg2compose convert icon.svg --multicolor-template examples/templates/material_theme.j2
+
+# Combine multicolor with composable function template (recommended)
+svg2compose convert icon.svg -t composable_function --multicolor-template material_theme.j2
+
+# Batch convert entire icon set with fallback template
+svg2compose batch icons/ src/icons/ -t val_declaration --multicolor-template material_theme.j2
+```
+
+**What happens:**
+- **Match found**: Uses `material_theme.j2` with color parameterization
+- **No match**: Falls back to specified template (`composable_function` or `val_declaration`)
+- **No template specified**: Falls back to `default` template
+- **Result**: Consistent output format regardless of color content
+
+**Custom color scheme:**
+```bash
+svg2compose convert brand_icon.svg -t icon_object --multicolor-template brand_colors.j2
+```
+
+### Template Selection Logic
+
+The system intelligently chooses when to use multicolor templates:
+
+1. **Color Intersection Check**: When SVG colors overlap with template color mappings
+2. **Use Multicolor Template**: Apply color substitution when matches are found
+3. **Fallback to Regular Template**: When no colors match, use the specified template without color substitution
+
+**Important**: Multicolor templates work with any regular template. The system behavior:
+
+- **With both templates**: `svg2compose convert icon.svg -t composable_function --multicolor-template theme.j2`
+  - Use `theme.j2` when colors match
+  - Fall back to `composable_function` when no matches
+  
+- **Multicolor only**: `svg2compose convert icon.svg --multicolor-template theme.j2`
+  - Use `theme.j2` when colors match  
+  - Fall back to `default` template when no matches
+
+This ensures you always get a valid output while gaining color parameterization when applicable.
 
 #### Jinja2 Features
 

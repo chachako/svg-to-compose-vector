@@ -109,17 +109,30 @@ class ColorAnalyzer:
 
     try:
       # Look for color_mappings dictionary in template
-      # Pattern matches both: "#RRGGBB": and "#AARRGGBB": formats
-      color_mapping_pattern_6 = r'"(#[0-9A-Fa-f]{6})"\s*:\s*\{'
-      color_mapping_pattern_8 = r'"(#[0-9A-Fa-f]{8})"\s*:\s*\{'
+      # Support both full format: "#RRGGBB": {
+      # and simplified format: "#RRGGBB": "value"
 
-      # Find 6-digit hex colors (#RRGGBB)
-      matches_6 = re.findall(color_mapping_pattern_6, template_content)
-      colors.update(matches_6)
+      # Pattern for full format with object
+      full_pattern_6 = r'"(#[0-9A-Fa-f]{6})"\s*:\s*\{'
+      full_pattern_8 = r'"(#[0-9A-Fa-f]{8})"\s*:\s*\{'
 
-      # Find 8-digit hex colors (#AARRGGBB)
-      matches_8 = re.findall(color_mapping_pattern_8, template_content)
-      colors.update(matches_8)
+      # Pattern for simplified format with direct string value
+      simple_pattern_6 = r'"(#[0-9A-Fa-f]{6})"\s*:\s*"[^"]*"'
+      simple_pattern_8 = r'"(#[0-9A-Fa-f]{8})"\s*:\s*"[^"]*"'
+
+      # Find colors in full format
+      matches_6_full = re.findall(full_pattern_6, template_content)
+      colors.update(matches_6_full)
+
+      matches_8_full = re.findall(full_pattern_8, template_content)
+      colors.update(matches_8_full)
+
+      # Find colors in simplified format
+      matches_6_simple = re.findall(simple_pattern_6, template_content)
+      colors.update(matches_6_simple)
+
+      matches_8_simple = re.findall(simple_pattern_8, template_content)
+      colors.update(matches_8_simple)
 
     except Exception:
       # Gracefully handle template parsing errors

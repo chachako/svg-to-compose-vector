@@ -2,6 +2,40 @@
 
 This module handles the replacement of hex color values with parameter references
 in generated Kotlin code for multi-color icon templates.
+
+Supports two color mapping formats:
+
+1. Full format (with parameters):
+   {%- set color_mappings = {
+       "#FF0000": {"semantic_name": "errorColor", "replacement": "Color.Red"},
+       "#0000FF": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"}
+   } -%}
+
+   Generated function will have corresponding color parameters:
+   fun MyIcon(
+     errorColor: Color = Color.Red,
+     primaryColor: Color = MaterialTheme.colorScheme.primary
+   ): ImageVector
+
+2. Simplified format (direct replacement):
+   {%- set color_mappings = {
+       "#FF0000": "MaterialTheme.colorScheme.error",
+       "#0000FF": "MaterialTheme.colorScheme.primary"
+   } -%}
+
+   Generated function will have no parameters, colors are directly replaced:
+   fun MyIcon(): ImageVector
+
+   Color(0xFFFF0000) in code becomes MaterialTheme.colorScheme.error
+
+3. Mixed format:
+   {%- set color_mappings = {
+       "#FF0000": {"semantic_name": "errorColor", "replacement": "Color.Red"},
+       "#0000FF": "MaterialTheme.colorScheme.primary"
+   } -%}
+
+   Generated function will only have semantic parameters:
+   fun MyIcon(errorColor: Color = Color.Red): ImageVector
 """
 
 import re
@@ -28,8 +62,8 @@ class ColorParameterSubstitution:
     Returns:
       Dictionary mapping hex colors to their semantic info:
       {
-        "#2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary"},
-        "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"}
+        "#2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"},
+        "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"}
       }
     """
     mappings = {}
@@ -43,16 +77,32 @@ class ColorParameterSubstitution:
       if match:
         mappings_block = match.group(1)
 
-        # Extract individual color mappings with more flexible pattern
+        # Extract individual color mappings with flexible patterns
         # Pattern handles both 6-digit (#RRGGBB) and 8-digit (#AARRGGBB) hex colors
-        color_entry_pattern = r'"(#[0-9A-Fa-f]{6,8})"\s*:\s*\{\s*"semantic_name"\s*:\s*"([^"]+)"\s*,\s*"default_value"\s*:\s*"([^"]+)"\s*\}'
+        # Support both full format and simplified format
 
-        for match in re.finditer(color_entry_pattern, mappings_block, re.DOTALL):
+        # Full format: "#color": {"semantic_name": "name", "replacement": "value"}
+        full_pattern = r'"(#[0-9A-Fa-f]{6,8})"\s*:\s*\{\s*"semantic_name"\s*:\s*"([^"]+)"\s*,\s*"replacement"\s*:\s*"([^"]+)"\s*\}'
+
+        # Simplified format: "#color": "replacement_value"
+        simple_pattern = r'"(#[0-9A-Fa-f]{6,8})"\s*:\s*"([^"]+)"'
+
+        # First process full format entries
+        for match in re.finditer(full_pattern, mappings_block, re.DOTALL):
           hex_color = match.group(1).upper()  # Normalize to uppercase
           semantic_name = match.group(2)
-          default_value = match.group(3)
+          replacement = match.group(3)
 
-          mappings[hex_color] = {"semantic_name": semantic_name, "default_value": default_value}
+          mappings[hex_color] = {"semantic_name": semantic_name, "replacement": replacement}
+
+        # Then process simplified format entries (only if not already processed)
+        for match in re.finditer(simple_pattern, mappings_block, re.DOTALL):
+          hex_color = match.group(1).upper()  # Normalize to uppercase
+          replacement_value = match.group(2)
+
+          # Only add if not already processed by full pattern
+          if hex_color not in mappings:
+            mappings[hex_color] = {"semantic_name": None, "replacement": replacement_value}
 
     except Exception as e:
       # Gracefully handle parsing errors
@@ -84,21 +134,24 @@ class ColorParameterSubstitution:
 
     for hex_color, mapping in color_mappings.items():
       if hex_color.startswith("#"):
+        # Determine the replacement value (semantic_name or replacement)
+        replacement_value = mapping.get("semantic_name") or mapping["replacement"]
+
         if len(hex_color) == 7:
           # Convert #RRGGBB to 0xFFRRGGBB format (full opacity)
           argb_hex = f"FF{hex_color[1:].upper()}"
-          argb_to_param[argb_hex] = mapping["semantic_name"]
+          argb_to_param[argb_hex] = replacement_value
 
           # Check if this hex color matches a built-in color
           color_obj = IrColor.from_hex(hex_color)
           builtin_name = color_obj.to_compose_color_name()
           if builtin_name:
-            builtin_name_to_param[builtin_name] = mapping["semantic_name"]
+            builtin_name_to_param[builtin_name] = replacement_value
 
         elif len(hex_color) == 9:
           # Convert #AARRGGBB to 0xAARRGGBB format (with alpha)
           argb_hex = hex_color[1:].upper()
-          argb_to_param[argb_hex] = mapping["semantic_name"]
+          argb_to_param[argb_hex] = replacement_value
 
     # Replace SolidColor(Color.BuiltinName) patterns first
     builtin_solid_pattern = re.compile(r"SolidColor\(Color\.([A-Za-z]+)\)")
@@ -182,8 +235,10 @@ class ColorParameterSubstitution:
       normalized_color = hex_color.upper()
       if normalized_color in color_mappings:
         mapping = color_mappings[normalized_color]
-        param_line = f"  {mapping['semantic_name']}: Color = {mapping['default_value']}"
-        parameters.append(param_line)
+        # Only add parameters for mappings with semantic_name (not direct replacements)
+        if mapping.get("semantic_name"):
+          param_line = f"  {mapping['semantic_name']}: Color = {mapping['replacement']}"
+          parameters.append(param_line)
 
     return ",\n".join(parameters)
 

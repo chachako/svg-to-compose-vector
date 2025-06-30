@@ -112,8 +112,8 @@ class TestColorParameterSubstitution:
       {{- imports }}
 
       {%- set color_mappings = {
-          "#2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary"},
-          "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"}
+          "#2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"},
+          "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"}
       } -%}
 
       @Composable
@@ -128,9 +128,9 @@ class TestColorParameterSubstitution:
     expected_mappings = {
       "#2196F3": {
         "semantic_name": "primaryColor",
-        "default_value": "MaterialTheme.colorScheme.primary",
+        "replacement": "MaterialTheme.colorScheme.primary",
       },
-      "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"},
+      "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"},
     }
 
     assert mappings == expected_mappings
@@ -153,9 +153,9 @@ class TestColorParameterSubstitution:
     color_mappings = {
       "#2196F3": {
         "semantic_name": "primaryColor",
-        "default_value": "MaterialTheme.colorScheme.primary",
+        "replacement": "MaterialTheme.colorScheme.primary",
       },
-      "#00FF00": {"semantic_name": "successColor", "default_value": "Color.Green"},
+      "#00FF00": {"semantic_name": "successColor", "replacement": "Color.Green"},
     }
 
     substitution = ColorParameterSubstitution()
@@ -180,9 +180,9 @@ class TestColorParameterSubstitution:
     color_mappings = {
       "#2196F3": {
         "semantic_name": "primaryColor",
-        "default_value": "MaterialTheme.colorScheme.primary",
+        "replacement": "MaterialTheme.colorScheme.primary",
       },
-      "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"},
+      "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"},
     }
 
     substitution = ColorParameterSubstitution()
@@ -201,7 +201,7 @@ class TestColorParameterSubstitution:
     color_mappings = {
       "#2196F3": {
         "semantic_name": "primaryColor",
-        "default_value": "MaterialTheme.colorScheme.primary",
+        "replacement": "MaterialTheme.colorScheme.primary",
       }
       # #9C27B0 is intentionally not mapped
     }
@@ -230,9 +230,9 @@ class TestColorParameterSubstitution:
     color_mappings = {
       "#2196F3": {
         "semantic_name": "primaryColor",
-        "default_value": "MaterialTheme.colorScheme.primary",
+        "replacement": "MaterialTheme.colorScheme.primary",
       },
-      "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"},
+      "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"},
     }
 
     substitution = ColorParameterSubstitution()
@@ -250,8 +250,8 @@ class TestColorParameterSubstitution:
       {{- imports }}
 
       {%- set color_mappings = {
-          "#2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)"},
-          "#FF9800": {"semantic_name": "accentColor", "default_value": "MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)"}
+          "#2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)"},
+          "#FF9800": {"semantic_name": "accentColor", "replacement": "MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)"}
       } -%}
 
       @Composable
@@ -266,11 +266,11 @@ class TestColorParameterSubstitution:
     expected_mappings = {
       "#2196F3": {
         "semantic_name": "primaryColor",
-        "default_value": "MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)",
+        "replacement": "MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)",
       },
       "#FF9800": {
         "semantic_name": "accentColor",
-        "default_value": "MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)",
+        "replacement": "MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)",
       },
     }
 
@@ -296,14 +296,14 @@ class TestMultiColorTemplateIntegration:
       {{- imports }}
 
       {%- set color_mappings = {
-          "#2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary"},
-          "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"}
+          "#2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"},
+          "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"}
       } -%}
 
       @Composable
       fun {{ name.name_part_pascal }}(
       {%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
-        {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+        {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
       {%- endfor %}
       ): ImageVector {
         return {{ build_code_with_color_params }}
@@ -372,8 +372,8 @@ class TestMultiColorTemplateIntegration:
       {{- imports }}
 
       {%- set color_mappings = {
-          "#2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary"},
-          "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"}
+          "#2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"},
+          "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"}
       } -%}
 
       @Composable
@@ -465,15 +465,15 @@ class TestMultiColorTemplateIntegration:
       {{- imports }}
 
       {%- set color_mappings = {
-          "#CC2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary"},
-          "#99FF9800": {"semantic_name": "accentColor", "default_value": "MaterialTheme.colorScheme.secondary"},
-          "#4CAF50": {"semantic_name": "successColor", "default_value": "Color.Green"}
+          "#CC2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"},
+          "#99FF9800": {"semantic_name": "accentColor", "replacement": "MaterialTheme.colorScheme.secondary"},
+          "#4CAF50": {"semantic_name": "successColor", "replacement": "Color.Green"}
       } -%}
 
       @Composable
       fun {{ name.name_part_pascal }}(
       {%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
-        {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+        {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
       {%- endfor %}
       ): ImageVector {
         return {{ build_code_with_color_params }}
@@ -556,14 +556,14 @@ class TestMultiColorOutputPrecision:
       {{- imports }}
 
       {%- set color_mappings = {
-          "#2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary"},
-          "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"}
+          "#2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"},
+          "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"}
       } -%}
 
       @Composable
       fun {{ name.name_part_pascal }}(
       {%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
-        {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+        {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
       {%- endfor %}
       ): ImageVector {
         return {{ build_code_with_color_params }}
@@ -676,6 +676,173 @@ class TestMultiColorOutputPrecision:
         assert prev_line.startswith("import ") or prev_line.strip() == "", (
           f"Unexpected line before @Composable: {prev_line}"
         )
+
+    finally:
+      template_path.unlink()  # Clean up
+
+  def test_direct_color_replacement_without_parameters(self):
+    """Test that colors can be directly replaced without creating function parameters."""
+
+    # Create SVG with colors that should be directly replaced
+    svg_content = dedent("""
+      <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="0" width="12" height="12" fill="#FF0000"/>   <!-- Red -> Direct replacement -->
+        <rect x="12" y="0" width="12" height="12" fill="#0000FF"/>  <!-- Blue -> Direct replacement -->
+        <rect x="0" y="12" width="24" height="12" fill="#00FF00"/>  <!-- Green -> Direct replacement -->
+      </svg>
+    """).strip()
+
+    # Create multicolor template with simplified color mappings (no semantic_name)
+    multicolor_template = dedent("""
+      {{- imports }}
+
+      {%- set color_mappings = {
+          "#FF0000": "MaterialTheme.colorScheme.error",
+          "#0000FF": "MaterialTheme.colorScheme.primary",
+          "#00FF00": "MaterialTheme.colorScheme.secondary"
+      } -%}
+
+      @Composable
+      fun {{ name.name_part_pascal }}(): ImageVector {
+        return {{ build_code_with_color_params }}
+      }
+    """).strip()
+
+    # Parse and generate
+    parser = SvgParser()
+    ir = parser.parse_svg(svg_content)
+
+    name_resolver = NameResolver()
+    name_components = name_resolver.resolve_name_from_string("DirectReplacementIcon")
+    ir.name = name_components.name_part_pascal
+
+    generator = ImageVectorGenerator()
+    core_code, imports = generator.generate_core_code(ir)
+
+    # Create temporary template file
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".j2", delete=False) as f:
+      f.write(multicolor_template)
+      template_path = Path(f.name)
+
+    try:
+      config = Config()
+      template_engine = TemplateEngine(config)
+
+      result = template_engine.render_with_multicolor_support(
+        template_name="default",
+        build_code=core_code,
+        imports=imports,
+        ir=ir,
+        multicolor_template_path=template_path,
+        name_components=name_components,
+      )
+
+      # Verify multicolor template was used
+      assert "@Composable" in result
+      assert "fun DirectReplacementIcon(): ImageVector" in result
+
+      # Verify NO function parameters (since we're using direct replacement)
+      assert "fun DirectReplacementIcon():" in result  # No parameters
+      assert "primaryColor:" not in result
+      assert "errorColor:" not in result
+      assert "secondaryColor:" not in result
+
+      # Verify direct color replacements worked
+      assert "fill = SolidColor(MaterialTheme.colorScheme.error)," in result
+      assert "fill = SolidColor(MaterialTheme.colorScheme.primary)," in result
+      assert "fill = SolidColor(MaterialTheme.colorScheme.secondary)," in result
+
+      # Verify NO hex colors remain
+      assert "Color(0xFFFF0000)" not in result
+      assert "Color(0xFF0000FF)" not in result
+      assert "Color(0xFF00FF00)" not in result
+
+    finally:
+      template_path.unlink()  # Clean up
+
+  def test_mixed_semantic_and_direct_replacement(self):
+    """Test template with both semantic parameters and direct replacements."""
+
+    svg_content = dedent("""
+      <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="0" width="8" height="8" fill="#FF0000"/>   <!-- Red -> Parameter -->
+        <rect x="8" y="0" width="8" height="8" fill="#0000FF"/>  <!-- Blue -> Direct replacement -->
+        <rect x="16" y="0" width="8" height="8" fill="#00FF00"/> <!-- Green -> Direct replacement -->
+        <rect x="0" y="8" width="24" height="8" fill="#FFFF00"/> <!-- Yellow -> Parameter -->
+      </svg>
+    """).strip()
+
+    # Template mixing semantic parameters and direct replacements
+    multicolor_template = dedent("""
+      {{- imports }}
+
+      {%- set color_mappings = {
+          "#FF0000": {"semantic_name": "errorColor", "replacement": "Color.Red"},
+          "#0000FF": "MaterialTheme.colorScheme.primary",
+          "#00FF00": "MaterialTheme.colorScheme.secondary",
+          "#FFFF00": {"semantic_name": "warningColor", "replacement": "Color.Yellow"}
+      } -%}
+
+      @Composable
+      fun {{ name.name_part_pascal }}(
+      {%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
+        {%- if mapping is mapping and mapping.semantic_name is defined %}
+        {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
+        {%- endif %}
+      {%- endfor %}
+      ): ImageVector {
+        return {{ build_code_with_color_params }}
+      }
+    """).strip()
+
+    # Parse and generate
+    parser = SvgParser()
+    ir = parser.parse_svg(svg_content)
+
+    name_resolver = NameResolver()
+    name_components = name_resolver.resolve_name_from_string("MixedMappingIcon")
+    ir.name = name_components.name_part_pascal
+
+    generator = ImageVectorGenerator()
+    core_code, imports = generator.generate_core_code(ir)
+
+    # Create temporary template file
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".j2", delete=False) as f:
+      f.write(multicolor_template)
+      template_path = Path(f.name)
+
+    try:
+      config = Config()
+      template_engine = TemplateEngine(config)
+
+      result = template_engine.render_with_multicolor_support(
+        template_name="default",
+        build_code=core_code,
+        imports=imports,
+        ir=ir,
+        multicolor_template_path=template_path,
+        name_components=name_components,
+      )
+
+      # Verify function has only semantic parameters (not direct replacements)
+      assert "errorColor: Color = Color.Red" in result
+      assert "warningColor: Color = Color.Yellow" in result
+
+      # Verify semantic parameter substitutions
+      assert "fill = SolidColor(errorColor)," in result
+      assert "fill = SolidColor(warningColor)," in result
+
+      # Verify direct replacements
+      assert "fill = SolidColor(MaterialTheme.colorScheme.primary)," in result
+      assert "fill = SolidColor(MaterialTheme.colorScheme.secondary)," in result
+
+      # Verify no direct replacement values appear as parameters
+      assert "MaterialTheme.colorScheme.primary:" not in result
+      assert "MaterialTheme.colorScheme.secondary:" not in result
 
     finally:
       template_path.unlink()  # Clean up

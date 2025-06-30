@@ -44,16 +44,16 @@ class TestBuiltinColorsMulticolor:
       {{- imports }}
 
       {%- set color_mappings = {
-          "#000000": {"semantic_name": "primaryColor", "default_value": "Color.Black"},
-          "#FF0000": {"semantic_name": "dangerColor", "default_value": "Color.Red"},
-          "#FFFFFF": {"semantic_name": "backgroundColor", "default_value": "Color.White"},
-          "#0000FF": {"semantic_name": "accentColor", "default_value": "Color.Blue"}
+          "#000000": {"semantic_name": "primaryColor", "replacement": "Color.Black"},
+          "#FF0000": {"semantic_name": "dangerColor", "replacement": "Color.Red"},
+          "#FFFFFF": {"semantic_name": "backgroundColor", "replacement": "Color.White"},
+          "#0000FF": {"semantic_name": "accentColor", "replacement": "Color.Blue"}
       } -%}
 
       @Composable
       fun {{ name.name_part_pascal }}(
       {%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
-        {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+        {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
       {%- endfor %}
       ): ImageVector {
         return {{ build_code_with_color_params }}
@@ -137,18 +137,18 @@ class TestBuiltinColorsMulticolor:
       {{- imports }}
 
       {%- set color_mappings = {
-          "#808080": {"semantic_name": "neutralColor", "default_value": "Color.Gray"},
-          "#CCCCCC": {"semantic_name": "lightColor", "default_value": "Color.LightGray"},
-          "#444444": {"semantic_name": "darkColor", "default_value": "Color.DarkGray"},
-          "#FFFF00": {"semantic_name": "warningColor", "default_value": "Color.Yellow"},
-          "#00FFFF": {"semantic_name": "infoColor", "default_value": "Color.Cyan"},
-          "#FF00FF": {"semantic_name": "highlightColor", "default_value": "Color.Magenta"}
+          "#808080": {"semantic_name": "neutralColor", "replacement": "Color.Gray"},
+          "#CCCCCC": {"semantic_name": "lightColor", "replacement": "Color.LightGray"},
+          "#444444": {"semantic_name": "darkColor", "replacement": "Color.DarkGray"},
+          "#FFFF00": {"semantic_name": "warningColor", "replacement": "Color.Yellow"},
+          "#00FFFF": {"semantic_name": "infoColor", "replacement": "Color.Cyan"},
+          "#FF00FF": {"semantic_name": "highlightColor", "replacement": "Color.Magenta"}
       } -%}
 
       @Composable
       fun {{ name.name_part_pascal }}(
       {%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
-        {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+        {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
       {%- endfor %}
       ): ImageVector {
         return {{ build_code_with_color_params }}
@@ -220,16 +220,16 @@ class TestBuiltinColorsMulticolor:
       {{- imports }}
 
       {%- set color_mappings = {
-          "#FF0000": {"semantic_name": "errorColor", "default_value": "Color.Red"},
-          "#2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary"},
-          "#000000": {"semantic_name": "textColor", "default_value": "Color.Black"},
-          "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"}
+          "#FF0000": {"semantic_name": "errorColor", "replacement": "Color.Red"},
+          "#2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"},
+          "#000000": {"semantic_name": "textColor", "replacement": "Color.Black"},
+          "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"}
       } -%}
 
       @Composable
       fun {{ name.name_part_pascal }}(
       {%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
-        {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+        {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
       {%- endfor %}
       ): ImageVector {
         return {{ build_code_with_color_params }}
@@ -300,14 +300,14 @@ class TestBuiltinColorsMulticolor:
       {{- imports }}
 
       {%- set color_mappings = {
-          "#FF0000": {"semantic_name": "startColor", "default_value": "Color.Red"},
-          "#0000FF": {"semantic_name": "endColor", "default_value": "Color.Blue"}
+          "#FF0000": {"semantic_name": "startColor", "replacement": "Color.Red"},
+          "#0000FF": {"semantic_name": "endColor", "replacement": "Color.Blue"}
       } -%}
 
       @Composable
       fun {{ name.name_part_pascal }}(
       {%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
-        {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+        {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
       {%- endfor %}
       ): ImageVector {
         return {{ build_code_with_color_params }}
