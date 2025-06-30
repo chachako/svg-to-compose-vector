@@ -543,7 +543,7 @@ class TestMultiColorOutputPrecision:
 
   def test_complete_output_with_whitespace_preservation(self):
     """Test complete multicolor template output including blank line preservation."""
-    
+
     svg_content = dedent("""
       <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <circle cx="6" cy="6" r="4" fill="#2196F3"/>
@@ -603,7 +603,7 @@ class TestMultiColorOutputPrecision:
 
       # Test the specific structure we expect from color mapping section
       lines = result.split("\n")
-      
+
       # Find the blank line after imports
       blank_line_found = False
       composable_line_idx = -1
@@ -612,18 +612,20 @@ class TestMultiColorOutputPrecision:
           continue
         elif line.strip() == "":
           # This should be the blank line after imports
-          if i > 0 and lines[i-1].startswith("import "):
+          if i > 0 and lines[i - 1].startswith("import "):
             blank_line_found = True
             composable_line_idx = i + 1
-            assert lines[i+1].strip() == "@Composable", f"Expected @Composable after blank line, got: '{lines[i+1]}'"
+            assert lines[i + 1].strip() == "@Composable", (
+              f"Expected @Composable after blank line, got: '{lines[i + 1]}'"
+            )
             break
-      
+
       assert blank_line_found, "No blank line found after imports"
-      
+
       # Verify function structure
       assert lines[composable_line_idx] == "@Composable"
       assert "fun WhitespaceTestIcon(" in lines[composable_line_idx + 1]
-      
+
       # Verify parameters are properly formatted (they are on separate lines)
       # The parameters should be on lines 8 and 9 based on debug output
       param_lines = [lines[8], lines[9]]
@@ -643,7 +645,7 @@ class TestMultiColorOutputPrecision:
       expected_structure_checks = [
         # Should have imports
         "import androidx.compose.ui.graphics.Color",
-        "import androidx.compose.ui.graphics.SolidColor", 
+        "import androidx.compose.ui.graphics.SolidColor",
         "import androidx.compose.ui.graphics.vector.ImageVector",
         # Should have blank line, then @Composable
         # Should have proper function structure
@@ -664,9 +666,9 @@ class TestMultiColorOutputPrecision:
         "fill = SolidColor(accentColor),",
         # Should end properly
         "}.build()",
-        "}"
+        "}",
       ]
-      
+
       for expected in expected_structure_checks:
         assert expected in result, f"Expected structure element missing: '{expected}'"
 
@@ -789,7 +791,7 @@ class TestMultiColorOutputPrecision:
 
       # Verify that both parameters are present in the following lines
       # (parameters are now on separate lines)
-      function_section = "\n".join(lines[function_start_line:function_start_line+5])
+      function_section = "\n".join(lines[function_start_line : function_start_line + 5])
       assert "primaryColor: Color = MaterialTheme.colorScheme.primary" in function_section
       assert "accentColor: Color = Color(0xFFFF9800)" in function_section
 
