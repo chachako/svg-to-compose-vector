@@ -1,0 +1,160 @@
+"""Color parameter substitution for multi-color template support.
+
+This module handles the replacement of hex color values with parameter references
+in generated Kotlin code for multi-color icon templates.
+"""
+
+import re
+from pathlib import Path
+
+
+class ColorParameterSubstitution:
+  """Handles color parameter substitution in generated Kotlin code."""
+
+  def __init__(self):
+    # Regex patterns for color matching
+    self.color_pattern = re.compile(r"Color\(0x([A-F0-9]{8})\)")
+    self.solid_color_pattern = re.compile(r"SolidColor\(Color\(0x([A-F0-9]{8})\)\)")
+    self.brush_color_pattern = re.compile(r"(\d+f\s+to\s+)Color\(0x([A-F0-9]{8})\)")
+
+  def extract_color_mappings_from_template(
+    self, template_content: str
+  ) -> dict[str, dict[str, str]]:
+    """Extract color mappings dictionary from template content.
+
+    Args:
+      template_content: The Jinja2 template content
+
+    Returns:
+      Dictionary mapping hex colors to their semantic info:
+      {
+        "#2196F3": {"semantic_name": "primaryColor", "default_value": "MaterialTheme.colorScheme.primary"},
+        "#FF9800": {"semantic_name": "accentColor", "default_value": "Color(0xFFFF9800)"}
+      }
+    """
+    mappings = {}
+
+    try:
+      # Look for color_mappings block in template
+      # Handle Jinja2 set syntax with multi-line blocks
+      mapping_pattern = r"\{%-\s*set\s+color_mappings\s*=\s*\{(.*?)\}\s*-%\}"
+      match = re.search(mapping_pattern, template_content, re.DOTALL)
+
+      if match:
+        mappings_block = match.group(1)
+
+        # Extract individual color mappings with more flexible pattern
+        # Pattern handles both 6-digit (#RRGGBB) and 8-digit (#AARRGGBB) hex colors
+        color_entry_pattern = r'"(#[0-9A-Fa-f]{6,8})"\s*:\s*\{\s*"semantic_name"\s*:\s*"([^"]+)"\s*,\s*"default_value"\s*:\s*"([^"]+)"\s*\}'
+
+        for match in re.finditer(color_entry_pattern, mappings_block, re.DOTALL):
+          hex_color = match.group(1).upper()  # Normalize to uppercase
+          semantic_name = match.group(2)
+          default_value = match.group(3)
+
+          mappings[hex_color] = {"semantic_name": semantic_name, "default_value": default_value}
+
+    except Exception as e:
+      # Gracefully handle parsing errors
+      print(f"Error parsing template mappings: {e}")
+      pass
+
+    return mappings
+
+  def substitute_colors_in_code(
+    self, kotlin_code: str, color_mappings: dict[str, dict[str, str]]
+  ) -> str:
+    """Replace hex color values with parameter references in Kotlin code.
+
+    Args:
+      kotlin_code: The generated Kotlin ImageVector code
+      color_mappings: Color mapping dictionary from template
+
+    Returns:
+      Kotlin code with color parameters substituted
+    """
+    modified_code = kotlin_code
+
+    # Create mapping from ARGB hex to parameter names
+    argb_to_param = {}
+    for hex_color, mapping in color_mappings.items():
+      if hex_color.startswith("#"):
+        if len(hex_color) == 7:
+          # Convert #RRGGBB to 0xFFRRGGBB format (full opacity)
+          argb_hex = f"FF{hex_color[1:].upper()}"
+          argb_to_param[argb_hex] = mapping["semantic_name"]
+        elif len(hex_color) == 9:
+          # Convert #AARRGGBB to 0xAARRGGBB format (with alpha)
+          argb_hex = hex_color[1:].upper()
+          argb_to_param[argb_hex] = mapping["semantic_name"]
+
+    # Replace SolidColor(Color(0xFFxxxxxx)) patterns
+    def replace_solid_color(match):
+      argb_value = match.group(1)
+      if argb_value in argb_to_param:
+        return f"SolidColor({argb_to_param[argb_value]})"
+      return match.group(0)  # No replacement
+
+    modified_code = self.solid_color_pattern.sub(replace_solid_color, modified_code)
+
+    # Replace standalone Color(0xFFxxxxxx) patterns
+    def replace_color(match):
+      argb_value = match.group(1)
+      if argb_value in argb_to_param:
+        return argb_to_param[argb_value]
+      return match.group(0)  # No replacement
+
+    modified_code = self.color_pattern.sub(replace_color, modified_code)
+
+    # Replace gradient color stop patterns: 0f to Color(0xFFxxxxxx)
+    def replace_brush_color(match):
+      prefix = match.group(1)  # "0f to " part
+      argb_value = match.group(2)
+      if argb_value in argb_to_param:
+        return f"{prefix}{argb_to_param[argb_value]}"
+      return match.group(0)  # No replacement
+
+    modified_code = self.brush_color_pattern.sub(replace_brush_color, modified_code)
+
+    return modified_code
+
+  def generate_parameter_list(
+    self, used_colors: set[str], color_mappings: dict[str, dict[str, str]]
+  ) -> str:
+    """Generate Kotlin function parameter list for colors.
+
+    Args:
+      used_colors: Set of hex colors used in the SVG
+      color_mappings: Color mapping dictionary from template
+
+    Returns:
+      Kotlin parameter list string (without surrounding parentheses)
+    """
+    parameters = []
+
+    for hex_color in sorted(used_colors):
+      normalized_color = hex_color.upper()
+      if normalized_color in color_mappings:
+        mapping = color_mappings[normalized_color]
+        param_line = f"  {mapping['semantic_name']}: Color = {mapping['default_value']}"
+        parameters.append(param_line)
+
+    return ",\n".join(parameters)
+
+  def load_and_parse_template(self, template_path: Path) -> dict[str, dict[str, str]]:
+    """Load template file and extract color mappings.
+
+    Args:
+      template_path: Path to the template file
+
+    Returns:
+      Color mappings dictionary
+    """
+    if not template_path.exists():
+      return {}
+
+    try:
+      template_content = template_path.read_text(encoding="utf-8")
+      return self.extract_color_mappings_from_template(template_content)
+    except Exception:
+      return {}

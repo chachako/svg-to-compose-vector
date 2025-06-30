@@ -1,0 +1,19 @@
+<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blue circle (mapped to primaryColor) -->
+  <circle cx="6" cy="6" r="4" fill="#2196F3"/>
+  
+  <!-- Orange rectangle (mapped to accentColor) -->
+  <rect x="12" y="2" width="8" height="8" fill="#FF9800"/>
+  
+  <!-- Green triangle (mapped to successColor) -->
+  <path d="M 2 14 L 10 14 L 6 22 Z" fill="#4CAF50"/>
+  
+  <!-- Red path (mapped to errorColor) -->
+  <path d="M 14 14 Q 18 14 22 18 Q 18 22 14 22 Z" fill="#F44336"/>
+  
+  <!-- Purple element (NOT mapped - should keep original hex value) -->
+  <circle cx="18" cy="18" r="2" fill="#9C27B0"/>
+  
+  <!-- Teal element (NOT mapped - should keep original hex value) -->
+  <rect x="20" y="20" width="3" height="3" fill="#009688"/>
+</svg>

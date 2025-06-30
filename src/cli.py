@@ -46,12 +46,19 @@ def cli(ctx):
   type=click.Path(exists=True, path_type=Path),
   help="Path to configuration file.",
 )
+@click.option(
+  "--multicolor-template",
+  "-mt",
+  type=click.Path(exists=True, path_type=Path),
+  help="Template file for multi-color SVGs with color parameterization.",
+)
 def convert(
   input_file: Path,
   output: Path | None,
   name: str | None,
   template: str | None,
   config: Path | None,
+  multicolor_template: Path | None,
 ):
   """Convert SVG file to Kotlin Compose ImageVector code.
 
@@ -100,12 +107,14 @@ def convert(
     generator = ImageVectorGenerator()
     core_code, imports = generator.generate_core_code(ir)
 
-    # Apply template with flexible naming
+    # Apply template with multi-color support
     template_engine = TemplateEngine(config_obj)
-    final_code = template_engine.render(
+    final_code = template_engine.render_with_multicolor_support(
       template_name=template_name,
       build_code=core_code,
       imports=imports,
+      ir=ir,
+      multicolor_template_path=multicolor_template,
       name_components=name_components,
     )
 
@@ -181,7 +190,7 @@ def templates():
 @cli.command()
 def version():
   """Show version information."""
-  click.echo("SVG to Compose ImageVector Converter v0.1.5")
+  click.echo("SVG to Compose ImageVector Converter v0.1.6")
   click.echo("Built with modern Python and targeting Compose UI")
 
 
@@ -222,6 +231,12 @@ def version():
   is_flag=True,
   help="Show what would be generated without creating files.",
 )
+@click.option(
+  "--multicolor-template",
+  "-mt",
+  type=click.Path(exists=True, path_type=Path),
+  help="Template file for multi-color SVGs with color parameterization.",
+)
 def batch(
   input_dir: Path,
   output: Path | None,
@@ -230,6 +245,7 @@ def batch(
   overwrite: bool,
   config: Path | None,
   dry_run: bool,
+  multicolor_template: Path | None,
 ):
   """Convert all SVG files in a directory to Kotlin ImageVector files.
 
@@ -316,12 +332,14 @@ def batch(
         ir = parser.parse_svg(svg_content)
         ir.name = name_components.name_part_pascal
 
-        # Generate code
+        # Generate code with multi-color support
         core_code, imports = generator.generate_core_code(ir)
-        final_code = template_engine.render(
+        final_code = template_engine.render_with_multicolor_support(
           template_name=template_name,
           build_code=core_code,
           imports=imports,
+          ir=ir,
+          multicolor_template_path=multicolor_template,
           name_components=name_components,
         )
 

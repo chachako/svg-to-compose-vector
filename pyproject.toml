@@ -1,6 +1,6 @@
 [project]
 name = "svg-to-compose-vector"
-version = "0.1.5"
+version = "0.1.6"
 description = "Convert SVG files to Kotlin Compose ImageVector code with high fidelity and production-ready output"
 readme = "README.md"
 license = { text = "MIT" }
@@ -29,10 +29,18 @@ keywords = [
     "conversion",
 ]
 requires-python = ">=3.13"
-dependencies = ["jinja2>=3.1.0", "click>=8.0.0"]
+dependencies = [
+    "jinja2>=3.1.0",
+ "click>=8.0.0",
+ "keyring>=25.6.0",
+]
 
 [dependency-groups]
 dev = ["pytest>=7.0.0", "ruff>=0.1.0", "build>=1.2.2.post1", "twine>=6.1.0"]
+publishing = [
+    "keyring>=25.6.0",
+    "twine>=6.1.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/chachako/svg-to-compose-vector"

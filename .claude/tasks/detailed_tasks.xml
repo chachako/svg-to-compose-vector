@@ -466,6 +466,21 @@
                         <output>bool</output>
                         <logic>Return len(used_colors) > 1</logic>
                     </method>
+                    <method name="parse_template_color_mappings">
+                        <input>template_content: str</input>
+                        <output>Set[str] (hex colors defined in template mappings)</output>
+                        <logic>
+                            1. Parse Jinja2 template content
+                            2. Extract color_mappings dictionary variable
+                            3. Return set of hex color keys from mappings
+                            4. Handle template parsing errors gracefully
+                        </logic>
+                    </method>
+                    <method name="should_use_multicolor_template">
+                        <input>svg_colors: Set[str], template_colors: Set[str]</input>
+                        <output>bool</output>
+                        <logic>Return len(svg_colors.intersection(template_colors)) > 0</logic>
+                    </method>
                 </class>
             </implementation>
         </task>
@@ -481,10 +496,12 @@
                     </new_variables>
                     <method name="render_with_multicolor_support">
                         <logic>
-                            1. Detect if SVG is multi-color
-                            2. If multi-color and multicolor_template provided, use multicolor template
-                            3. Generate build_code_with_color_params by replacing hex colors with parameter references
-                            4. Provide used_colors set to template for inline mapping access
+                            1. Extract all colors used in SVG
+                            2. Parse color_mappings from multicolor template (if provided)
+                            3. Check if intersection exists: (SVG colors ∩ template mappings) > 0
+                            4. If intersection exists, use multicolor template with color parameter substitution
+                            5. Otherwise fallback to default template
+                            6. Provide used_colors set and color_mappings to template context
                         </logic>
                     </method>
                 </enhancement>
@@ -503,9 +520,10 @@
                         <type>str</type>
                     </new_option>
                     <logic>
-                        - If multicolor_template provided and SVG has multiple colors, use multicolor template
-                        - Otherwise use regular template
-                        - Apply to both convert and batch commands
+                        - If multicolor_template provided and (SVG colors ∩ template mappings) > 0, use multicolor template
+                        - Otherwise use regular template (graceful fallback)
+                        - Apply smart template selection to both convert and batch commands
+                        - Support partial color mapping (unmapped colors keep original hex values)
                     </logic>
                 </cli_enhancement>
             </implementation>

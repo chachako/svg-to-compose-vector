@@ -124,6 +124,10 @@ class IrColor:
     """Check if this color is fully transparent."""
     return self.alpha == 0
 
+  def to_hex(self) -> str:
+    """Convert color to hex string format #RRGGBB."""
+    return f"#{self.red:02X}{self.green:02X}{self.blue:02X}"
+
   def __str__(self) -> str:
     return self.to_compose_color()
 

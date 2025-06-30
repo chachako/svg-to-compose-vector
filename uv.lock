@@ -487,11 +487,12 @@ wheels = [
 
 [[package]]
 name = "svg-to-compose-vector"
-version = "0.1.5"
+version = "0.1.6"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
     { name = "jinja2" },
+    { name = "keyring" },
 ]
 
 [package.dev-dependencies]
@@ -501,11 +502,16 @@ dev = [
     { name = "ruff" },
     { name = "twine" },
 ]
+publishing = [
+    { name = "keyring" },
+    { name = "twine" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = ">=8.0.0" },
     { name = "jinja2", specifier = ">=3.1.0" },
+    { name = "keyring", specifier = ">=25.6.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -513,6 +519,10 @@ dev = [
     { name = "build", specifier = ">=1.2.2.post1" },
     { name = "pytest", specifier = ">=7.0.0" },
     { name = "ruff", specifier = ">=0.1.0" },
+    { name = "twine", specifier = ">=6.1.0" },
+]
+publishing = [
+    { name = "keyring", specifier = ">=25.6.0" },
     { name = "twine", specifier = ">=6.1.0" },
 ]
 
