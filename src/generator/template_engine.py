@@ -33,8 +33,8 @@ class TemplateEngine:
     templates_dir = Path(__file__).parent / "templates"
     self._env = Environment(
       loader=FileSystemLoader(templates_dir),
-      trim_blocks=True,
-      lstrip_blocks=True,
+      trim_blocks=False,  # Preserve newlines after template blocks
+      lstrip_blocks=False,  # Preserve leading whitespace in template blocks
     )
 
     # Custom filters

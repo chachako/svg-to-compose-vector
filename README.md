@@ -641,6 +641,21 @@ Combine both approaches in a single template:
 } -%}
 ```
 
+#### Transparency Support
+Transparent colors are fully supported using ARGB hex format:
+
+```jinja2
+{%- set color_mappings = {
+    "#2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"},
+    "#802196F3": {"semantic_name": "primaryAlpha", "replacement": "MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)"},
+    "#FF9800": "MaterialTheme.colorScheme.secondary"
+} -%}
+```
+
+- `#802196F3` maps 50% transparent blue (`0x80` = 128/255 ≈ 0.5 alpha)
+- `#CCFF9800` would map 80% transparent orange (`0xCC` = 204/255 ≈ 0.8 alpha)
+- Mix semantic parameters with direct theme replacements for optimal flexibility
+
 ### Template Variables
 
 Multicolor templates have access to additional variables:

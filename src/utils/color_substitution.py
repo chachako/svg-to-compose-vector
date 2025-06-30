@@ -71,7 +71,8 @@ class ColorParameterSubstitution:
     try:
       # Look for color_mappings block in template
       # Handle Jinja2 set syntax with multi-line blocks
-      mapping_pattern = r"\{%-\s*set\s+color_mappings\s*=\s*\{(.*?)\}\s*-%\}"
+      # Support both {%- ... -%} and {%- ... %} formats
+      mapping_pattern = r"\{%-\s*set\s+color_mappings\s*=\s*\{(.*?)\}\s*-?%\}"
       match = re.search(mapping_pattern, template_content, re.DOTALL)
 
       if match:

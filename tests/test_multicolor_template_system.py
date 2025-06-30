@@ -541,6 +541,138 @@ class TestMultiColorTemplateIntegration:
 class TestMultiColorOutputPrecision:
   """Test output precision and formatting for multi-color templates."""
 
+  def test_complete_output_with_whitespace_preservation(self):
+    """Test complete multicolor template output including blank line preservation."""
+    
+    svg_content = dedent("""
+      <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="6" cy="6" r="4" fill="#2196F3"/>
+        <rect x="12" y="2" width="8" height="8" fill="#FF9800"/>
+      </svg>
+    """).strip()
+
+    # Template with strategic blank lines that should be preserved
+    multicolor_template = dedent("""
+      {{ imports }}
+
+      {%- set color_mappings = {
+          "#2196F3": {"semantic_name": "primaryColor", "replacement": "MaterialTheme.colorScheme.primary"},
+          "#FF9800": {"semantic_name": "accentColor", "replacement": "Color(0xFFFF9800)"}
+      } %}
+
+      @Composable
+      fun {{ name.name_part_pascal }}(
+      {%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
+        {{ mapping.semantic_name }}: Color = {{ mapping.replacement }}{{ "," if not loop.last }}
+      {%- endfor %}
+      ): ImageVector {
+        return {{ build_code_with_color_params }}
+      }
+    """).strip()
+
+    # Parse and generate
+    parser = SvgParser()
+    ir = parser.parse_svg(svg_content)
+
+    name_resolver = NameResolver()
+    name_components = name_resolver.resolve_name_from_string("WhitespaceTestIcon")
+    ir.name = name_components.name_part_pascal
+
+    generator = ImageVectorGenerator()
+    core_code, imports = generator.generate_core_code(ir)
+
+    # Create temporary template file
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".j2", delete=False) as f:
+      f.write(multicolor_template)
+      template_path = Path(f.name)
+
+    try:
+      config = Config()
+      template_engine = TemplateEngine(config)
+
+      result = template_engine.render_with_multicolor_support(
+        template_name="default",
+        build_code=core_code,
+        imports=imports,
+        ir=ir,
+        multicolor_template_path=template_path,
+        name_components=name_components,
+      )
+
+      # Test the specific structure we expect from color mapping section
+      lines = result.split("\n")
+      
+      # Find the blank line after imports
+      blank_line_found = False
+      composable_line_idx = -1
+      for i, line in enumerate(lines):
+        if line.startswith("import "):
+          continue
+        elif line.strip() == "":
+          # This should be the blank line after imports
+          if i > 0 and lines[i-1].startswith("import "):
+            blank_line_found = True
+            composable_line_idx = i + 1
+            assert lines[i+1].strip() == "@Composable", f"Expected @Composable after blank line, got: '{lines[i+1]}'"
+            break
+      
+      assert blank_line_found, "No blank line found after imports"
+      
+      # Verify function structure
+      assert lines[composable_line_idx] == "@Composable"
+      assert "fun WhitespaceTestIcon(" in lines[composable_line_idx + 1]
+      
+      # Verify parameters are properly formatted (they are on separate lines)
+      # The parameters should be on lines 8 and 9 based on debug output
+      param_lines = [lines[8], lines[9]]
+      param_content = " ".join(line.strip() for line in param_lines)
+      assert "primaryColor: Color = MaterialTheme.colorScheme.primary" in param_content
+      assert "accentColor: Color = Color(0xFFFF9800)" in param_content
+
+      # Verify color substitution worked
+      assert "fill = SolidColor(primaryColor)," in result
+      assert "fill = SolidColor(accentColor)," in result
+
+      # Verify complete structure
+      assert "return ImageVector.Builder(" in result
+      assert "}.build()" in result
+
+      # Test the complete expected structure
+      expected_structure_checks = [
+        # Should have imports
+        "import androidx.compose.ui.graphics.Color",
+        "import androidx.compose.ui.graphics.SolidColor", 
+        "import androidx.compose.ui.graphics.vector.ImageVector",
+        # Should have blank line, then @Composable
+        # Should have proper function structure
+        "@Composable",
+        "fun WhitespaceTestIcon(",
+        "primaryColor: Color = MaterialTheme.colorScheme.primary",
+        "accentColor: Color = Color(0xFFFF9800)",
+        "): ImageVector {",
+        # Should have ImageVector structure
+        "return ImageVector.Builder(",
+        'name = "WhitespaceTestIcon",',
+        "defaultWidth = 24.dp,",
+        "defaultHeight = 24.dp,",
+        "viewportWidth = 24f,",
+        "viewportHeight = 24f,",
+        # Should have color-substituted paths
+        "fill = SolidColor(primaryColor),",
+        "fill = SolidColor(accentColor),",
+        # Should end properly
+        "}.build()",
+        "}"
+      ]
+      
+      for expected in expected_structure_checks:
+        assert expected in result, f"Expected structure element missing: '{expected}'"
+
+    finally:
+      template_path.unlink()  # Clean up
+
   def test_complete_multicolor_output_format(self):
     """Test complete output format matches expected structure exactly."""
     # Create test SVG with specific colors
@@ -646,18 +778,20 @@ class TestMultiColorOutputPrecision:
       assert result.strip().endswith("}")
 
       # Check the function signature format
-      # Currently parameters are on same line as function declaration
-      function_line = None
-      for line in lines:
+      # Parameters are now on separate lines
+      function_start_line = None
+      for i, line in enumerate(lines):
         if "fun MultiColorIcon(" in line:
-          function_line = line
+          function_start_line = i
           break
 
-      assert function_line is not None, "Function declaration not found"
+      assert function_start_line is not None, "Function declaration not found"
 
-      # Verify that both parameters are present in the function signature
-      assert "primaryColor: Color = MaterialTheme.colorScheme.primary" in function_line
-      assert "accentColor: Color = Color(0xFFFF9800)" in function_line
+      # Verify that both parameters are present in the following lines
+      # (parameters are now on separate lines)
+      function_section = "\n".join(lines[function_start_line:function_start_line+5])
+      assert "primaryColor: Color = MaterialTheme.colorScheme.primary" in function_section
+      assert "accentColor: Color = Color(0xFFFF9800)" in function_section
 
       # Check that imports and @Composable are properly separated
       # Find line with @Composable
