@@ -7,8 +7,8 @@
     
     <current_status>
         <overall_status>Production-ready SVG to Compose ImageVector converter with comprehensive feature set including multicolor template support</overall_status>
-        <current_version>0.1.6</current_version>
-        <test_status>253 tests passing (100% pass rate)</test_status>
+        <current_version>0.1.7</current_version>
+        <test_status>257 tests passing (100% pass rate)</test_status>
         
         <phase id="planning" status="completed">
             <task id="requirements_analysis" status="completed">
@@ -366,6 +366,36 @@
                           }.build()
                         }
                     </generated_example>
+                </task>
+                <task id="builtin_colors_multicolor_support" status="completed">
+                    <completion_details>
+                        - Enhanced ColorParameterSubstitution to handle Compose built-in color names (Color.Black, Color.Red, etc.)
+                        - Added support for mapping built-in colors in multicolor templates with automatic parameter substitution
+                        - Implemented intelligent color replacement for both hex values and built-in color names
+                        - Added support for gradient color substitution with built-in colors (0f to primaryColor instead of 0f to Color.Red)
+                        - Created comprehensive test suite with 4 new test cases covering all built-in color scenarios
+                        - Fixed code quality issues and formatting for production-ready release
+                        - Updated version to 0.1.7 with 257 total tests passing
+                        - Verified end-to-end functionality with complete multicolor template workflow
+                    </completion_details>
+                    <example_usage>
+                        # Template maps built-in colors to semantic parameters
+                        {%- set color_mappings = {
+                            "#000000": {"semantic_name": "primaryColor", "default_value": "Color.Black"},
+                            "#FF0000": {"semantic_name": "errorColor", "default_value": "Color.Red"}
+                        } -%}
+                        
+                        # Generated code uses parameter names instead of color constants
+                        path(fill = SolidColor(primaryColor)) { ... }  // NOT Color.Black
+                        path(fill = SolidColor(errorColor)) { ... }    // NOT Color.Red
+                    </example_usage>
+                    <technical_improvements>
+                        - Enhanced regex patterns to handle Color.Name format in addition to Color(0xFFxxxxxx)
+                        - Utilized existing COMPOSE_BUILTIN_COLORS mapping for consistent color recognition
+                        - Supported all Compose built-in colors: Black, White, Red, Green, Blue, Yellow, Cyan, Magenta, Gray variants
+                        - Maintained backward compatibility with hex color mapping and partial template usage
+                        - Ensured proper handling in gradients, solid colors, and mixed color scenarios
+                    </technical_improvements>
                 </task>
             </completed_tasks>
             <next_priority_tasks>

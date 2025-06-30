@@ -1,0 +1,17 @@
+{{- imports }}
+
+{%- set color_mappings = {
+    "#000000": {"semantic_name": "primaryColor", "default_value": "Color.Black"},
+    "#FF0000": {"semantic_name": "errorColor", "default_value": "Color.Red"},
+    "#FFFFFF": {"semantic_name": "backgroundColor", "default_value": "Color.White"},
+    "#0000FF": {"semantic_name": "accentColor", "default_value": "Color.Blue"}
+} -%}
+
+@Composable
+fun {{ name.name_part_pascal }}(
+{%- for color_hex, mapping in color_mappings.items() if color_hex in used_colors %}
+  {{ mapping.semantic_name }}: Color = {{ mapping.default_value }}{{ "," if not loop.last }}
+{%- endfor %}
+): ImageVector {
+  return {{ build_code_with_color_params }}
+}

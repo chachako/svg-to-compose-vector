@@ -73,20 +73,66 @@ class ColorParameterSubstitution:
     Returns:
       Kotlin code with color parameters substituted
     """
+    from ..ir.color import IrColor
+
     modified_code = kotlin_code
 
     # Create mapping from ARGB hex to parameter names
     argb_to_param = {}
+    # Also create mapping from built-in color names to parameter names
+    builtin_name_to_param = {}
+
     for hex_color, mapping in color_mappings.items():
       if hex_color.startswith("#"):
         if len(hex_color) == 7:
           # Convert #RRGGBB to 0xFFRRGGBB format (full opacity)
           argb_hex = f"FF{hex_color[1:].upper()}"
           argb_to_param[argb_hex] = mapping["semantic_name"]
+
+          # Check if this hex color matches a built-in color
+          color_obj = IrColor.from_hex(hex_color)
+          builtin_name = color_obj.to_compose_color_name()
+          if builtin_name:
+            builtin_name_to_param[builtin_name] = mapping["semantic_name"]
+
         elif len(hex_color) == 9:
           # Convert #AARRGGBB to 0xAARRGGBB format (with alpha)
           argb_hex = hex_color[1:].upper()
           argb_to_param[argb_hex] = mapping["semantic_name"]
+
+    # Replace SolidColor(Color.BuiltinName) patterns first
+    builtin_solid_pattern = re.compile(r"SolidColor\(Color\.([A-Za-z]+)\)")
+
+    def replace_builtin_solid_color(match):
+      builtin_name = match.group(1)
+      if builtin_name in builtin_name_to_param:
+        return f"SolidColor({builtin_name_to_param[builtin_name]})"
+      return match.group(0)  # No replacement
+
+    modified_code = builtin_solid_pattern.sub(replace_builtin_solid_color, modified_code)
+
+    # Replace standalone Color.BuiltinName patterns
+    builtin_color_pattern = re.compile(r"Color\.([A-Za-z]+)")
+
+    def replace_builtin_color(match):
+      builtin_name = match.group(1)
+      if builtin_name in builtin_name_to_param:
+        return builtin_name_to_param[builtin_name]
+      return match.group(0)  # No replacement
+
+    modified_code = builtin_color_pattern.sub(replace_builtin_color, modified_code)
+
+    # Replace gradient built-in color patterns: 0f to Color.BuiltinName
+    builtin_brush_pattern = re.compile(r"(\d+f\s+to\s+)Color\.([A-Za-z]+)")
+
+    def replace_builtin_brush_color(match):
+      prefix = match.group(1)  # "0f to " part
+      builtin_name = match.group(2)
+      if builtin_name in builtin_name_to_param:
+        return f"{prefix}{builtin_name_to_param[builtin_name]}"
+      return match.group(0)  # No replacement
+
+    modified_code = builtin_brush_pattern.sub(replace_builtin_brush_color, modified_code)
 
     # Replace SolidColor(Color(0xFFxxxxxx)) patterns
     def replace_solid_color(match):

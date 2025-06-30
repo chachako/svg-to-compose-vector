@@ -1,0 +1,16 @@
+<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Black circle for primary text -->
+  <circle cx="6" cy="6" r="4" fill="#000000"/>
+  
+  <!-- Red square for error/danger -->
+  <rect x="12" y="2" width="8" height="8" fill="#FF0000"/>
+  
+  <!-- White triangle for background -->
+  <path d="M 2 14 L 10 14 L 6 22 Z" fill="#FFFFFF"/>
+  
+  <!-- Blue curved shape for accent -->
+  <path d="M 14 14 Q 18 14 22 18 Q 18 22 14 22 Z" fill="#0000FF"/>
+  
+  <!-- Custom purple - will remain as hex -->
+  <circle cx="18" cy="18" r="2" fill="#9C27B0"/>
+</svg>
